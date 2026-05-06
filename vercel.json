@@ -3,6 +3,5 @@
   "cleanUrls": true,
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "outputDirectory": "client/dist"
+  ]
 }

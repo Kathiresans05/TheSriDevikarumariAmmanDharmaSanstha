@@ -6,7 +6,36 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-app.use(cors());
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    
+    const allowed = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      /\.vercel\.app$/,      // Allow any Vercel deployment
+      /\.onrender\.com$/     // Allow any Render domain
+    ];
+    
+    const isAllowed = allowed.some(pattern => 
+      typeof pattern === 'string' ? pattern === origin : pattern.test(origin)
+    );
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.warn(`[CORS] Blocked origin: ${origin}`);
+      callback(null, true); // Allow all for now — tighten later
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-auth-token', 'Authorization']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight requests
 app.use(express.json());
 
 // Global Request Logger

@@ -6,7 +6,7 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [credentials, setCredentials] = useState({ email: '', password: '' });
   const navigate = useNavigate();
 
   const handleLogin = (e) => {
@@ -14,13 +14,12 @@ const AdminLogin = () => {
     setIsLoading(true);
     setError('');
 
-    // Hardcoded demo credentials
     setTimeout(() => {
-      if (credentials.username === 'admin' && credentials.password === 'temple123') {
+      if (credentials.email === 'admin@devikarumari.com' && credentials.password === 'Temple@2025') {
         localStorage.setItem('isAdminAuthenticated', 'true');
         navigate('/admin');
       } else {
-        setError('Invalid username or password. Please try again.');
+        setError('Invalid email or password. Please try again.');
         setIsLoading(false);
       }
     }, 1500);
@@ -55,18 +54,18 @@ const AdminLogin = () => {
             )}
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Username</label>
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-temple-red transition-colors">
                   <User size={18} />
                 </div>
                 <input
-                  type="text"
+                  type="email"
                   required
-                  value={credentials.username}
-                  onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+                  value={credentials.email}
+                  onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
                   className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-temple-red/20 focus:bg-white transition-all text-gray-800"
-                  placeholder="admin"
+                  placeholder="admin@devikarumari.com"
                 />
               </div>
             </div>

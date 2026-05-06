@@ -11,7 +11,9 @@ import {
   Search,
   Plus,
   Star,
-  Edit
+  Edit,
+  Menu,
+  X
 } from 'lucide-react';
 
 import { useTemple } from '../../context/TempleContext';
@@ -21,6 +23,7 @@ const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostn
 const AdminDashboard = () => {
   const { templeData, updateTempleData } = useTemple();
   const [activeTab, setActiveTab] = useState('overview');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -298,10 +301,21 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans">
+    <div className="flex h-screen bg-gray-50 font-sans relative overflow-hidden">
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white flex flex-col">
-        <div className="p-6 border-b border-gray-800">
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col transition-transform duration-300 lg:relative lg:translate-x-0
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-temple-gold rounded-full flex items-center justify-center">
               <span className="text-temple-red font-bold text-xl">ॐ</span>
@@ -311,9 +325,12 @@ const AdminDashboard = () => {
               <p className="text-[10px] text-gray-400">Control Panel v1.0</p>
             </div>
           </div>
+          <button className="lg:hidden text-gray-400" onClick={() => setIsSidebarOpen(false)}>
+            <X size={24} />
+          </button>
         </div>
         
-        <nav className="flex-grow p-4 space-y-2">
+        <nav className="flex-grow p-4 space-y-2 overflow-y-auto">
           {[
             { id: 'overview', label: 'Overview', icon: LayoutDashboard },
             { id: 'sevas', label: 'Manage Sevas', icon: Star },
@@ -325,7 +342,12 @@ const AdminDashboard = () => {
           ].map((item) => (
             <button
               key={item.id}
-              onClick={() => { setActiveTab(item.id); if(item.id === 'bookings') fetchBookings(); if(item.id === 'donations') fetchDonations(); }}
+              onClick={() => { 
+                setActiveTab(item.id); 
+                setIsSidebarOpen(false);
+                if(item.id === 'bookings') fetchBookings(); 
+                if(item.id === 'donations') fetchDonations(); 
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group ${
                 activeTab === item.id 
                 ? 'bg-temple-gold text-temple-red shadow-lg shadow-temple-gold/20 scale-[1.02]' 
@@ -339,7 +361,7 @@ const AdminDashboard = () => {
         </nav>
 
         <div className="p-4 border-t border-gray-800">
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-red-500/10 rounded-lg text-sm transition-all">
+          <button className="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-red-500/10 rounded-lg text-sm transition-all min-h-[44px]">
             <LogOut size={20} />
             Logout
           </button>
@@ -347,46 +369,55 @@ const AdminDashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow overflow-y-auto">
+      <main className="flex-grow flex flex-col h-full overflow-hidden">
         {/* Topbar */}
-        <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 sticky top-0 z-30">
-          <div className="flex items-center gap-4 bg-gray-100 px-4 py-2 rounded-lg w-96">
-            <Search size={18} className="text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Search bookings, transactions..." 
-              className="bg-transparent border-none outline-none text-sm w-full"
-            />
+        <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30 shrink-0">
+          <div className="flex items-center gap-4">
+            <button 
+              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Menu size={24} />
+            </button>
+            <div className="hidden md:flex items-center gap-4 bg-gray-100 px-4 py-2 rounded-lg lg:w-96">
+              <Search size={18} className="text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                className="bg-transparent border-none outline-none text-sm w-full"
+              />
+            </div>
           </div>
           
-          <div className="flex items-center gap-6">
-            <button className="relative text-gray-400 hover:text-gray-600">
+          <div className="flex items-center gap-3 md:gap-6">
+            <button className="relative text-gray-400 hover:text-gray-600 p-2">
               <Bell size={20} />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center border-2 border-white">3</span>
+              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center border-2 border-white">3</span>
             </button>
-            <div className="flex items-center gap-3 border-l pl-6 border-gray-200">
-              <div className="text-right">
+            <div className="flex items-center gap-3 md:border-l md:pl-6 border-gray-200">
+              <div className="text-right hidden sm:block">
                 <p className="text-sm font-bold text-gray-800">Admin User</p>
                 <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Super Admin</p>
               </div>
-              <div className="w-10 h-10 bg-temple-red rounded-full flex items-center justify-center text-white font-bold">A</div>
+              <div className="w-9 h-9 md:w-10 md:h-10 bg-temple-red rounded-full flex items-center justify-center text-white font-bold text-sm">A</div>
             </div>
           </div>
         </header>
 
-        {/* Dashboard Content */}
-        <div className="p-8">
-          {activeTab === 'overview' && (
-            <>
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-serif font-bold text-gray-800">Dashboard Overview</h2>
-                <button 
-                  onClick={() => { setModalType('booking'); setIsEditMode(false); setIsModalOpen(true); }}
-                  className="bg-temple-red text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-temple-saffron transition-all shadow-md active:scale-95"
-                >
-                  <Plus size={18} /> Add New Entry
-                </button>
-              </div>
+        {/* Dashboard Content Container */}
+        <div className="flex-grow overflow-y-auto overflow-x-hidden">
+          <div className="p-4 md:p-8">
+            {activeTab === 'overview' && (
+              <>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                  <h2 className="text-xl md:text-2xl font-serif font-bold text-gray-800">Dashboard Overview</h2>
+                  <button 
+                    onClick={() => { setModalType('booking'); setIsEditMode(false); setIsModalOpen(true); }}
+                    className="w-full sm:w-auto bg-temple-red text-white px-4 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-temple-saffron transition-all shadow-md active:scale-95"
+                  >
+                    <Plus size={18} /> Add New Entry
+                  </button>
+                </div>
 
               {/* Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
@@ -404,53 +435,55 @@ const AdminDashboard = () => {
                 ))}
               </div>
 
-              {/* Recent Activity Table */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                  <h3 className="text-lg font-bold text-gray-800">Recent Pooja Bookings</h3>
-                  <button className="text-temple-red text-sm font-bold hover:underline">View All</button>
+                {/* Recent Activity Table */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                    <h3 className="text-lg font-bold text-gray-800">Recent Pooja Bookings</h3>
+                    <button className="text-temple-red text-sm font-bold hover:underline">View All</button>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left min-w-[700px]">
+                      <thead>
+                        <tr className="bg-gray-50 text-gray-400 text-[10px] uppercase tracking-widest">
+                          <th className="px-6 py-4">ID</th>
+                          <th className="px-6 py-4">Devotee Name</th>
+                          <th className="px-6 py-4">Pooja Type</th>
+                          <th className="px-6 py-4">Booking Date</th>
+                          <th className="px-6 py-4">Status</th>
+                          <th className="px-6 py-4">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {adminBookings.slice(0, 5).map((booking) => (
+                          <tr key={booking.bookingId} className="hover:bg-gray-50/50 transition-colors">
+                            <td className="px-6 py-4 text-sm text-gray-400">#{booking.bookingId.slice(-4)}</td>
+                            <td className="px-6 py-4">
+                              <p className="text-sm font-bold text-gray-800">{booking.devoteeName}</p>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded">{getSevaName(booking.pooja)}</span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">{new Date(booking.date).toLocaleDateString()}</td>
+                            <td className="px-6 py-4">
+                              <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded ${
+                                booking.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
+                                booking.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-blue-100 text-blue-700'
+                              }`}>
+                                {booking.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <button className="text-gray-400 hover:text-gray-600 text-xs font-bold p-2 min-h-[44px]">Details</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="bg-gray-50 text-gray-400 text-[10px] uppercase tracking-widest">
-                      <th className="px-6 py-4">ID</th>
-                      <th className="px-6 py-4">Devotee Name</th>
-                      <th className="px-6 py-4">Pooja Type</th>
-                      <th className="px-6 py-4">Booking Date</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {adminBookings.slice(0, 5).map((booking) => (
-                      <tr key={booking.bookingId} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="px-6 py-4 text-sm text-gray-400">#{booking.bookingId.slice(-4)}</td>
-                        <td className="px-6 py-4">
-                          <p className="text-sm font-bold text-gray-800">{booking.devoteeName}</p>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded">{getSevaName(booking.pooja)}</span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{new Date(booking.date).toLocaleDateString()}</td>
-                        <td className="px-6 py-4">
-                          <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded ${
-                            booking.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
-                            booking.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-blue-100 text-blue-700'
-                          }`}>
-                            {booking.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <button className="text-gray-400 hover:text-gray-600 text-xs font-bold">Details</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
+              </>
+            )}
 
           {activeTab === 'bookings' && (
             <div className="space-y-8">
@@ -463,59 +496,61 @@ const AdminDashboard = () => {
               </div>
               
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="bg-gray-50 text-gray-400 text-[10px] uppercase tracking-widest">
-                      <th className="px-6 py-4">ID</th>
-                      <th className="px-6 py-4">Devotee</th>
-                      <th className="px-6 py-4">Pooja Type</th>
-                      <th className="px-6 py-4">Date & Time</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4">Amount</th>
-                      <th className="px-6 py-4">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {isFetching ? (
-                      <tr><td colSpan="7" className="px-6 py-10 text-center text-gray-400">Loading bookings...</td></tr>
-                    ) : error ? (
-                      <tr><td colSpan="7" className="px-6 py-10 text-center text-red-500 font-bold">{error}</td></tr>
-                    ) : adminBookings.length > 0 ? adminBookings.map((booking) => (
-                      <tr key={booking.bookingId} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="px-6 py-4 text-sm text-gray-400">#{booking.bookingId.slice(-4)}</td>
-                        <td className="px-6 py-4 text-sm font-bold text-gray-800">{booking.devoteeName}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{getSevaName(booking.pooja)}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {new Date(booking.date).toLocaleDateString()}
-                          <br/><span className="text-[10px] text-gray-400">{booking.time}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <select 
-                            value={booking.status}
-                            onChange={(e) => handleStatusUpdate(booking.userId, booking.bookingId, e.target.value)}
-                            className={`text-[10px] uppercase font-bold px-2 py-1 rounded outline-none border-none cursor-pointer ${
-                              booking.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
-                              booking.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-blue-100 text-blue-700'
-                            }`}
-                          >
-                            <option value="Pending">Pending</option>
-                            <option value="Confirmed">Confirmed</option>
-                            <option value="Completed">Completed</option>
-                          </select>
-                        </td>
-                        <td className="px-6 py-4 text-sm font-bold text-temple-red">{booking.amount}</td>
-                        <td className="px-6 py-4">
-                          <button className="text-gray-400 hover:text-blue-600 transition-colors"><Search size={16} /></button>
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left min-w-[800px]">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-400 text-[10px] uppercase tracking-widest">
+                        <th className="px-6 py-4">ID</th>
+                        <th className="px-6 py-4">Devotee</th>
+                        <th className="px-6 py-4">Pooja Type</th>
+                        <th className="px-6 py-4">Date & Time</th>
+                        <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4">Amount</th>
+                        <th className="px-6 py-4">Action</th>
                       </tr>
-                    )) : (
-                      <tr>
-                        <td colSpan="7" className="px-6 py-10 text-center text-gray-400">No bookings found in database</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {isFetching ? (
+                        <tr><td colSpan="7" className="px-6 py-10 text-center text-gray-400">Loading bookings...</td></tr>
+                      ) : error ? (
+                        <tr><td colSpan="7" className="px-6 py-10 text-center text-red-500 font-bold">{error}</td></tr>
+                      ) : adminBookings.length > 0 ? adminBookings.map((booking) => (
+                        <tr key={booking.bookingId} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="px-6 py-4 text-sm text-gray-400">#{booking.bookingId.slice(-4)}</td>
+                          <td className="px-6 py-4 text-sm font-bold text-gray-800">{booking.devoteeName}</td>
+                          <td className="px-6 py-4 text-sm text-gray-600">{getSevaName(booking.pooja)}</td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {new Date(booking.date).toLocaleDateString()}
+                            <br/><span className="text-[10px] text-gray-400">{booking.time}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <select 
+                              value={booking.status}
+                              onChange={(e) => handleStatusUpdate(booking.userId, booking.bookingId, e.target.value)}
+                              className={`text-[10px] uppercase font-bold px-2 py-1.5 rounded outline-none border-none cursor-pointer min-h-[32px] ${
+                                booking.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
+                                booking.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-blue-100 text-blue-700'
+                              }`}
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="Confirmed">Confirmed</option>
+                              <option value="Completed">Completed</option>
+                            </select>
+                          </td>
+                          <td className="px-6 py-4 text-sm font-bold text-temple-red">{booking.amount}</td>
+                          <td className="px-6 py-4">
+                            <button className="text-gray-400 hover:text-blue-600 transition-colors p-2 min-h-[44px]"><Search size={16} /></button>
+                          </td>
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan="7" className="px-6 py-10 text-center text-gray-400">No bookings found in database</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -530,89 +565,91 @@ const AdminDashboard = () => {
               </div>
               
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="bg-gray-50 text-gray-400 text-[10px] uppercase tracking-widest">
-                      <th className="px-6 py-4">Devotee</th>
-                      <th className="px-6 py-4">Cause</th>
-                      <th className="px-6 py-4">Transaction ID</th>
-                      <th className="px-6 py-4">Receipt</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4">Amount</th>
-                      <th className="px-6 py-4">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {adminDonations.length > 0 ? adminDonations.map((don, i) => (
-                      <tr key={don.id || i} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="px-6 py-4">
-                          <p className="text-sm font-bold text-gray-800">{don.devoteeName}</p>
-                          <p className="text-[10px] text-gray-400">{new Date(don.date).toLocaleDateString()}</p>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{don.cause}</td>
-                        <td className="px-6 py-4 text-xs font-mono text-gray-500">{don.transactionId || 'N/A'}</td>
-                        <td className="px-6 py-4">
-                          {don.receipt ? (
-                            <a href={don.receipt} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-xs flex items-center gap-1">
-                              View <ImageIcon size={12} />
-                            </a>
-                          ) : 'No Receipt'}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded ${
-                            don.status === 'Verified' ? 'bg-green-100 text-green-700' :
-                            don.status === 'Rejected' ? 'bg-red-100 text-red-700' :
-                            'bg-yellow-100 text-yellow-700'
-                          }`}>
-                            {don.status || 'Pending'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm font-bold text-temple-red">{don.amount}</td>
-                        <td className="px-6 py-4">
-                          {don.status !== 'Verified' && (
-                            <div className="flex gap-2">
-                              <button 
-                                onClick={() => handleDonationStatusUpdate(don.userId, don.id, 'Verified')}
-                                className="text-xs font-bold text-green-600 hover:underline"
-                              >
-                                Verify
-                              </button>
-                              <button 
-                                onClick={() => handleDonationStatusUpdate(don.userId, don.id, 'Rejected')}
-                                className="text-xs font-bold text-red-400 hover:underline"
-                              >
-                                Reject
-                              </button>
-                            </div>
-                          )}
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left min-w-[800px]">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-400 text-[10px] uppercase tracking-widest">
+                        <th className="px-6 py-4">Devotee</th>
+                        <th className="px-6 py-4">Cause</th>
+                        <th className="px-6 py-4">Transaction ID</th>
+                        <th className="px-6 py-4">Receipt</th>
+                        <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4">Amount</th>
+                        <th className="px-6 py-4">Action</th>
                       </tr>
-                    )) : (
-                      <tr><td colSpan="7" className="px-6 py-10 text-center text-gray-400">No donations found in database</td></tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {adminDonations.length > 0 ? adminDonations.map((don, i) => (
+                        <tr key={don.id || i} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="px-6 py-4">
+                            <p className="text-sm font-bold text-gray-800">{don.devoteeName}</p>
+                            <p className="text-[10px] text-gray-400">{new Date(don.date).toLocaleDateString()}</p>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">{don.cause}</td>
+                          <td className="px-6 py-4 text-xs font-mono text-gray-500">{don.transactionId || 'N/A'}</td>
+                          <td className="px-6 py-4">
+                            {don.receipt ? (
+                              <a href={don.receipt} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-xs flex items-center gap-1 min-h-[32px]">
+                                View <ImageIcon size={12} />
+                              </a>
+                            ) : 'No Receipt'}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded ${
+                              don.status === 'Verified' ? 'bg-green-100 text-green-700' :
+                              don.status === 'Rejected' ? 'bg-red-100 text-red-700' :
+                              'bg-yellow-100 text-yellow-700'
+                            }`}>
+                              {don.status || 'Pending'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm font-bold text-temple-red">{don.amount}</td>
+                          <td className="px-6 py-4">
+                            {don.status !== 'Verified' && (
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={() => handleDonationStatusUpdate(don.userId, don.id, 'Verified')}
+                                  className="text-xs font-bold text-green-600 hover:underline p-2 min-h-[44px]"
+                                >
+                                  Verify
+                                </button>
+                                <button 
+                                  onClick={() => handleDonationStatusUpdate(don.userId, don.id, 'Rejected')}
+                                  className="text-xs font-bold text-red-400 hover:underline p-2 min-h-[44px]"
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )) : (
+                        <tr><td colSpan="7" className="px-6 py-10 text-center text-gray-400">No donations found in database</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === 'gallery' && (
             <div className="space-y-8">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h2 className="text-2xl font-serif font-bold text-gray-800">Temple Media Manager</h2>
+                  <h2 className="text-xl md:text-2xl font-serif font-bold text-gray-800">Temple Media Manager</h2>
                   <p className="text-sm text-gray-500 mt-1">Manage images and spiritual videos for the gallery</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-2 w-full sm:w-auto">
                   <button 
                     onClick={() => { setModalType('image'); setIsEditMode(false); setIsModalOpen(true); }}
-                    className="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 transition-all flex items-center gap-2 active:scale-95"
+                    className="flex-1 sm:flex-none bg-white border border-gray-200 text-gray-600 px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 active:scale-95 min-h-[44px]"
                   >
                     <ImageIcon size={18} /> Add Image
                   </button>
                   <button 
                     onClick={() => { setModalType('video'); setIsEditMode(false); setIsModalOpen(true); }}
-                    className="bg-temple-red text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-temple-saffron transition-all shadow-md flex items-center gap-2 active:scale-95"
+                    className="flex-1 sm:flex-none bg-temple-red text-white px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-temple-saffron transition-all shadow-md flex items-center justify-center gap-2 active:scale-95 min-h-[44px]"
                   >
                     <Plus size={18} /> Add Video
                   </button>
@@ -672,14 +709,14 @@ const AdminDashboard = () => {
             <div className="space-y-12">
               {/* Festival Section */}
               <div className="space-y-6">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
-                    <h2 className="text-2xl font-serif font-bold text-gray-800">Events</h2>
+                    <h2 className="text-xl md:text-2xl font-serif font-bold text-gray-800">Events</h2>
                     <p className="text-sm text-gray-500">Upcoming festivals and sacred events</p>
                   </div>
                   <button 
                     onClick={() => { setModalType('event'); setIsEditMode(false); setModalData({ title: '', date: '', time: 'Full Day', type: 'Event', desc: '', attendees: '', isFeatured: true }); setIsModalOpen(true); }}
-                    className="bg-temple-red text-white px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-temple-saffron transition-all shadow-md"
+                    className="w-full sm:w-auto bg-temple-red text-white px-6 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-temple-saffron transition-all shadow-md active:scale-95 min-h-[44px]"
                   >
                     <Plus size={18} /> Add Event
                   </button>
@@ -724,14 +761,14 @@ const AdminDashboard = () => {
 
           {activeTab === 'sevas' && (
             <div className="space-y-8">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h2 className="text-2xl font-serif font-bold text-gray-800">Temple Sevas & Rituals</h2>
+                  <h2 className="text-xl md:text-2xl font-serif font-bold text-gray-800">Temple Sevas & Rituals</h2>
                   <p className="text-sm text-gray-500 mt-1">Configure the sacred offerings and their pricing</p>
                 </div>
                 <button 
                   onClick={() => { setModalType('seva'); setIsEditMode(false); setIsModalOpen(true); }}
-                  className="bg-temple-red text-white px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-temple-saffron transition-all shadow-md"
+                  className="w-full sm:w-auto bg-temple-red text-white px-6 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-temple-saffron transition-all shadow-md active:scale-95 min-h-[44px]"
                 >
                   <Plus size={18} /> Add New Seva
                 </button>
@@ -907,24 +944,25 @@ const AdminDashboard = () => {
               )}
             </div>
           )}
+          </div>
         </div>
       </main>
 
       {/* Add New Entry Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4">
           <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-          <div className="bg-white rounded-[32px] w-full max-w-xl relative z-10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-            <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <h3 className="text-2xl font-serif font-bold text-gray-800 capitalize">
+          <div className="bg-white rounded-none md:rounded-[32px] w-full max-w-xl h-full md:h-auto md:max-h-[90vh] relative z-10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 flex flex-col">
+            <div className="p-6 md:p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+              <h3 className="text-xl md:text-2xl font-serif font-bold text-gray-800 capitalize">
                 {isEditMode ? 'Edit' : 'Add New'} {modalType}
               </h3>
-              <button onClick={() => { setIsModalOpen(false); setIsEditMode(false); }} className="text-gray-400 hover:text-gray-600 transition-colors">
-                <Plus size={24} className="rotate-45" />
+              <button onClick={() => { setIsModalOpen(false); setIsEditMode(false); }} className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                <X size={24} />
               </button>
             </div>
             
-            <div className="p-8 space-y-6">
+            <div className="p-6 md:p-8 space-y-6 overflow-y-auto">
               {modalType === 'image' || modalType === 'video' ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

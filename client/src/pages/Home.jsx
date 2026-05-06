@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Calendar, Heart, ArrowRight, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { useTemple } from '../context/TempleContext';
@@ -7,6 +8,7 @@ import { useTemple } from '../context/TempleContext';
 const Home = () => {
   const { t } = useTranslation();
   const { templeData, loading } = useTemple();
+  const navigate = useNavigate();
   const [currentImage, setCurrentImage] = useState(0);
 
   const heroImages = [
@@ -40,7 +42,7 @@ const Home = () => {
   return (
     <div className="overflow-hidden bg-temple-white">
       {/* Hero Section */}
-      <section className="relative h-[90vh] flex items-center justify-center text-center text-white overflow-hidden">
+      <section className="relative h-[80vh] md:h-[90vh] flex items-center justify-center text-center text-white overflow-hidden">
         <div className="absolute inset-0 z-0">
           <AnimatePresence mode="wait">
             <motion.img
@@ -69,11 +71,17 @@ const Home = () => {
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}>
             <h1 className="text-4xl md:text-7xl font-serif mb-6 leading-tight">Divine Grace of Sri Devikarumari</h1>
             <p className="text-xl md:text-2xl font-light mb-8 italic text-temple-gold">A Sacred Sanctuary for Inner Peace and Spiritual Awakening</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-temple-saffron hover:bg-temple-red text-white px-8 py-4 rounded-full font-bold transition-all transform hover:scale-105 shadow-xl flex items-center justify-center gap-2">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
+              <button 
+                onClick={() => navigate('/pooja')}
+                className="w-full sm:w-auto max-w-[260px] sm:max-w-none mx-auto sm:mx-0 bg-temple-saffron hover:bg-temple-red text-white px-6 py-3 md:px-8 md:py-4 rounded-full font-bold transition-all transform hover:scale-105 shadow-xl flex items-center justify-center gap-2 text-sm md:text-base"
+              >
                 Book Pooja <ArrowRight size={18} />
               </button>
-              <button className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white px-8 py-4 rounded-full font-bold transition-all">
+              <button 
+                onClick={() => navigate('/gallery')}
+                className="w-full sm:w-auto max-w-[260px] sm:max-w-none mx-auto sm:mx-0 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white px-6 py-3 md:px-8 md:py-4 rounded-full font-bold transition-all text-sm md:text-base"
+              >
                 Virtual Tour
               </button>
             </div>
@@ -147,15 +155,15 @@ const Home = () => {
             <h2 className="text-4xl md:text-5xl font-serif text-temple-red mb-4">Divine Sevas & Offerings</h2>
             <p className="text-gray-500 max-w-2xl mx-auto">Participate in our ancient rituals and seek the blessings of the Divine Mother through various dedicated sevas.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
             {templeData.sevas?.filter(s => s.isFeatured).map((seva, i) => (
-              <div key={i} className="group p-8 rounded-3xl bg-temple-white border border-gray-100 hover:border-temple-gold transition-all duration-500 hover:shadow-2xl">
-                <div className="w-12 h-12 bg-temple-red text-white rounded-xl flex items-center justify-center mb-6 font-bold shadow-lg group-hover:scale-110 transition-transform">{seva.icon || 'ॐ'}</div>
-                <h4 className="text-xl font-bold text-gray-800 mb-3">{seva.name}</h4>
-                <p className="text-gray-500 text-sm mb-6 leading-relaxed">{seva.desc}</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-temple-red font-bold">{seva.price}</span>
-                  <button className="text-xs font-bold uppercase tracking-widest text-temple-gold hover:text-temple-red transition-colors flex items-center gap-1">
+              <div key={i} className="group p-4 md:p-8 rounded-3xl bg-temple-white border border-gray-100 hover:border-temple-gold transition-all duration-500 hover:shadow-2xl">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-temple-red text-white rounded-lg md:rounded-xl flex items-center justify-center mb-4 md:mb-6 font-bold shadow-lg group-hover:scale-110 transition-transform text-sm md:text-base">{seva.icon || 'ॐ'}</div>
+                <h4 className="text-base md:text-xl font-bold text-gray-800 mb-2 md:mb-3">{seva.name}</h4>
+                <p className="text-gray-500 text-[10px] md:text-sm mb-4 md:mb-6 leading-relaxed line-clamp-2 md:line-clamp-none">{seva.desc}</p>
+                <div className="flex flex-row justify-between items-center gap-2 pt-4 border-t border-gray-50">
+                  <span className="text-sm md:text-base font-bold text-temple-red">{seva.price}</span>
+                  <button className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-temple-gold hover:text-temple-red transition-colors flex items-center gap-1 whitespace-nowrap">
                     Book Now <ArrowRight size={14} />
                   </button>
                 </div>
@@ -180,52 +188,52 @@ const Home = () => {
               Explore Full Gallery
             </button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 h-[500px]">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 h-auto md:h-[500px]">
             {templeData.gallery && templeData.gallery.filter(item => item.isFeatured).length > 0 ? (
               (() => {
                 const featured = templeData.gallery.filter(item => item.isFeatured);
                 return (
                   <>
-                    <div className="col-span-2 row-span-2 rounded-3xl overflow-hidden shadow-xl border-4 border-white">
+                    <div className="col-span-2 row-span-1 md:row-span-2 rounded-2xl md:rounded-3xl overflow-hidden shadow-xl border-2 md:border-4 border-white aspect-video md:aspect-auto">
                       <img src={featured[0]?.url} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
                     </div>
-                    <div className="rounded-3xl overflow-hidden shadow-xl border-4 border-white">
+                    <div className="rounded-2xl md:rounded-3xl overflow-hidden shadow-xl border-2 md:border-4 border-white aspect-square md:aspect-auto">
                       <img src={featured[1]?.url || featured[0]?.url} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
                     </div>
-                    <div className="rounded-3xl overflow-hidden shadow-xl border-4 border-white">
+                    <div className="rounded-2xl md:rounded-3xl overflow-hidden shadow-xl border-2 md:border-4 border-white aspect-square md:aspect-auto">
                       <img src={featured[2]?.url || featured[0]?.url} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
                     </div>
-                    <div className="col-span-2 rounded-3xl overflow-hidden shadow-xl border-4 border-white">
+                    <div className="col-span-2 rounded-2xl md:rounded-3xl overflow-hidden shadow-xl border-2 md:border-4 border-white aspect-video md:aspect-auto">
                       <img src={featured[3]?.url || featured[0]?.url} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
                     </div>
                   </>
                 );
               })()
             ) : (
-              <div className="col-span-4 flex items-center justify-center text-gray-400">No featured gallery images.</div>
+              <div className="col-span-2 md:col-span-4 flex items-center justify-center text-gray-400 py-12">No featured gallery images.</div>
             )}
           </div>
         </div>
       </section>
 
       {/* Devotee Experience */}
-      <section className="py-24 gradient-red text-white overflow-hidden relative">
+      <section className="py-16 md:py-24 gradient-mixed text-white overflow-hidden relative">
         <div className="absolute top-0 right-0 opacity-10 translate-x-1/4 -translate-y-1/4">
-          <div className="w-96 h-96 border-[40px] border-white rounded-full"></div>
+          <div className="w-64 h-64 md:w-96 md:h-96 border-[20px] md:border-[40px] border-white rounded-full"></div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-16">
-          <div className="md:w-1/2">
-            <h2 className="text-4xl md:text-5xl font-serif mb-8">Devotee Experiences</h2>
-            <div className="bg-white/10 backdrop-blur-lg p-10 rounded-[40px] border border-white/20 relative">
-              <div className="text-6xl font-serif text-temple-gold absolute -top-4 -left-4">"</div>
-              <p className="text-xl italic mb-8 leading-relaxed">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-12 md:gap-16">
+          <div className="md:w-1/2 w-full">
+            <h2 className="text-3xl md:text-5xl font-serif mb-8 text-center md:text-left">Devotee Experiences</h2>
+            <div className="bg-white/10 backdrop-blur-lg p-6 md:p-10 rounded-[32px] md:rounded-[40px] border border-white/20 relative">
+              <div className="text-4xl md:text-6xl font-serif text-temple-gold absolute -top-2 md:-top-4 -left-2 md:-left-4">"</div>
+              <p className="text-base md:text-xl italic mb-6 md:mb-8 leading-relaxed">
                 Visiting this temple is like returning home to a mother's embrace. The peaceful atmosphere and the divine energy of Karumari Amman have guided me through many challenges. Truly a blessed place.
               </p>
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-temple-gold rounded-full flex items-center justify-center font-bold text-temple-red shadow-lg">R</div>
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-temple-gold rounded-full flex items-center justify-center font-bold text-temple-red shadow-lg">R</div>
                 <div>
-                  <h5 className="font-bold">Rajesh Kumar</h5>
-                  <p className="text-xs opacity-60 uppercase tracking-widest">Devotee for 15 years</p>
+                  <h5 className="font-bold text-sm md:text-base">Rajesh Kumar</h5>
+                  <p className="text-[10px] md:text-xs opacity-60 uppercase tracking-widest">Devotee for 15 years</p>
                 </div>
               </div>
             </div>
@@ -263,18 +271,18 @@ const Home = () => {
               <div className="inline-block px-4 py-1 bg-temple-red/10 text-temple-red rounded-full text-xs font-bold uppercase tracking-widest mb-6">Traditional Learning</div>
               <h2 className="text-4xl font-serif text-gray-800 mb-8">Path to Spiritual Enlightenment</h2>
               <p className="text-gray-600 mb-10 leading-relaxed">Beyond a place of worship, we are a center for Vedic learning and cultural preservation. Join our weekly sessions to deepen your understanding of our sacred traditions.</p>
-              <div className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-1 gap-4 md:gap-6">
                 {[
                   { title: 'Veda Pathshala', time: 'Every Morning 7:00 AM', desc: 'Sanskrit chanting and Vedic studies for young seekers.' },
                   { title: 'Bhagavad Gita Satsang', time: 'Sundays 5:00 PM', desc: 'Discourse on the timeless wisdom of the Gita and its modern application.' },
                   { title: 'Divine Bhajans', time: 'Fridays 6:30 PM', desc: 'Soul-stirring devotional music sessions to uplift the spirit.' },
                 ].map((item, i) => (
-                  <div key={i} className="flex gap-6 p-6 rounded-2xl bg-temple-white border border-gray-50 hover:border-temple-gold transition-all">
-                    <div className="w-12 h-12 bg-temple-gold text-white rounded-full flex items-center justify-center flex-shrink-0 shadow-md">ॐ</div>
+                  <div key={i} className="flex flex-col sm:flex-row gap-4 md:gap-6 p-4 md:p-6 rounded-2xl bg-temple-white border border-gray-50 hover:border-temple-gold transition-all">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-temple-gold text-white rounded-full flex items-center justify-center flex-shrink-0 shadow-md text-sm md:text-base">ॐ</div>
                     <div>
-                      <h4 className="font-bold text-gray-800">{item.title}</h4>
-                      <p className="text-xs text-temple-red font-bold mb-2">{item.time}</p>
-                      <p className="text-sm text-gray-500">{item.desc}</p>
+                      <h4 className="font-bold text-gray-800 text-sm md:text-base line-clamp-1">{item.title}</h4>
+                      <p className="text-[10px] md:text-xs text-temple-red font-bold mb-1 md:mb-2">{item.time}</p>
+                      <p className="text-[10px] md:text-sm text-gray-500 line-clamp-2 md:line-clamp-none">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -336,7 +344,7 @@ const Home = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-24 bg-temple-white">
+      <section className="pt-4 md:pt-8 pb-24 bg-temple-white">
         <div className="max-w-4xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-serif text-temple-red mb-4">Common Questions</h2>

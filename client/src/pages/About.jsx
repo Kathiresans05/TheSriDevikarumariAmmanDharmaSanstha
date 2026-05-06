@@ -4,9 +4,9 @@ import { motion } from 'framer-motion';
 const About = () => {
   return (
     <div>
-      <section className="gradient-red text-white py-20 px-4 text-center">
-        <h1 className="text-5xl font-serif mb-6">Our History & Legacy</h1>
-        <div className="w-24 h-1 bg-temple-gold mx-auto"></div>
+      <section className="gradient-mixed text-white py-12 md:py-20 px-4 text-center">
+        <h1 className="text-3xl md:text-5xl font-serif mb-4 md:mb-6">Our History & Legacy</h1>
+        <div className="w-20 h-1 bg-temple-gold mx-auto"></div>
       </section>
 
       <section className="py-20 px-4 max-w-7xl mx-auto">

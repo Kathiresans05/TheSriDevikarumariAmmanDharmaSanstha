@@ -67,8 +67,8 @@ const Pooja = () => {
         <p className="max-w-2xl mx-auto text-lg opacity-90">Participate in our sacred rituals and receive the blessings of Sri Devikarumari Amman.</p>
       </section>
 
-      <section className="py-20 px-4 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <section className="py-12 md:py-20 px-4 max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
           {poojas.map((p, i) => (
             <motion.div
               key={i}
@@ -78,33 +78,31 @@ const Pooja = () => {
               transition={{ delay: i * 0.1, duration: 0.5 }}
               className="group relative bg-white rounded-[24px] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100"
             >
-              <div className="p-8 relative z-10 flex flex-col h-full">
-                <div className="flex justify-between items-start mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-temple-saffron to-temple-red rounded-2xl flex items-center justify-center shadow-lg shadow-temple-red/20 transform group-hover:rotate-12 transition-transform duration-500">
-                    <span className="text-white text-3xl font-serif">{p.icon || 'ॐ'}</span>
+              <div className="p-4 md:p-8 relative z-10 flex flex-col h-full">
+                <div className="flex justify-between items-start mb-4 md:mb-6">
+                  <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-temple-saffron to-temple-red rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg shadow-temple-red/20 transform group-hover:rotate-12 transition-transform duration-500">
+                    <span className="text-white text-xl md:text-3xl font-serif">{p.icon || 'ॐ'}</span>
                   </div>
                   <div className="absolute top-0 right-0 w-24 h-24 bg-temple-gold/5 rounded-full -mr-8 -mt-8 flex items-center justify-center">
                     <span className="text-temple-gold/10 text-3xl font-serif">{p.icon || 'ॐ'}</span>
                   </div>
                 </div>
 
-                <h3 className="text-2xl font-serif text-gray-900 mb-4 group-hover:text-temple-red transition-colors capitalize leading-tight">
+                <h3 className="text-lg md:text-2xl font-serif text-gray-900 mb-2 md:mb-4 group-hover:text-temple-red transition-colors capitalize leading-tight">
                   {p.name}
                 </h3>
                 
-                <p className="text-gray-500 text-sm leading-relaxed mb-8 flex-grow">
+                <p className="text-gray-500 text-[10px] md:text-sm leading-relaxed mb-4 md:mb-8 flex-grow line-clamp-2 md:line-clamp-none">
                   {p.desc}
                 </p>
 
-                <div className="flex items-center justify-between mt-auto pt-6 border-t border-gray-100">
-                  <div>
-                    <span className="text-2xl font-bold text-temple-red tracking-tight">
-                      {p.price.includes('₹') ? p.price : `₹${p.price}`}
-                    </span>
-                  </div>
+                <div className="flex flex-row items-center justify-between mt-auto pt-4 md:pt-6 border-t border-gray-100 gap-2">
+                  <span className="text-base md:text-2xl font-bold text-temple-red tracking-tight">
+                    {p.price.includes('₹') ? p.price : `₹${p.price}`}
+                  </span>
                   <button 
                     onClick={() => handleBook(p)}
-                    className="bg-temple-red text-white h-12 px-6 rounded-xl font-bold hover:bg-temple-saffron transition-all shadow-lg active:scale-95"
+                    className="bg-temple-red text-white h-9 md:h-12 px-3 md:px-6 rounded-lg md:rounded-xl font-bold hover:bg-temple-saffron transition-all shadow-lg active:scale-95 text-[10px] md:text-base whitespace-nowrap"
                   >
                     Book Now
                   </button>

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Menu, X, Globe, User, LogOut } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X, Globe, User, LogOut, ArrowRight, Heart } from 'lucide-react';
 import { useTemple } from '../context/TempleContext';
 
 const Navbar = () => {
@@ -27,17 +28,17 @@ const Navbar = () => {
   return (
     <nav className="gradient-red text-white sticky top-0 z-50 shadow-lg border-b border-temple-gold/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16 md:h-20">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center gap-3 group">
-              <div className="w-12 h-12 bg-temple-gold rounded-full flex items-center justify-center transform group-hover:rotate-12 transition-transform shadow-inner">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-temple-gold rounded-full flex items-center justify-center transform group-hover:rotate-12 transition-transform shadow-inner">
                 <span className="text-temple-red font-bold text-xl">ॐ</span>
               </div>
-              <div className="flex flex-col">
-                <span className="font-serif text-lg leading-tight tracking-wide md:block hidden">
+              <div className="flex flex-col justify-center">
+                <span className="font-serif text-[15px] md:text-xl font-bold leading-none tracking-wide block">
                   SRI DEVIKARUMARI
                 </span>
-                <span className="text-[10px] font-sans font-medium tracking-[0.2em] text-temple-gold/90 md:block hidden">
+                <span className="text-[9px] md:text-[11px] font-sans font-bold tracking-[0.1em] md:tracking-[0.2em] text-temple-gold block mt-0.5">
                   AMMAN DHARMA SANSTHA
                 </span>
               </div>
@@ -82,13 +83,13 @@ const Navbar = () => {
                   </Link>
                 )}
 
-                <button
-                  onClick={toggleLanguage}
-                  className="flex items-center gap-1 bg-temple-gold text-temple-red px-4 py-1.5 rounded-full text-sm font-bold hover:bg-white transition-all shadow-md active:scale-95"
+                <Link 
+                  to="/donations" 
+                  className="hidden md:flex items-center gap-2 bg-temple-gold text-temple-red px-5 py-2 rounded-full text-sm font-bold hover:bg-white transition-all shadow-md active:scale-95"
                 >
-                  <Globe size={16} />
-                  {i18n.language === 'en' ? 'தமிழ்' : 'English'}
-                </button>
+                  <Heart size={16} fill="currentColor" />
+                  Donate
+                </Link>
               </div>
             </div>
           </div>
@@ -100,13 +101,6 @@ const Navbar = () => {
               </Link>
             )}
             <button
-              onClick={toggleLanguage}
-              className="flex items-center gap-1 bg-temple-gold text-temple-red px-3 py-1 rounded-full text-xs font-bold shadow-sm"
-            >
-              <Globe size={14} />
-              {i18n.language === 'en' ? 'தமிழ்' : 'ENG'}
-            </button>
-            <button
               onClick={() => setIsOpen(!isOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md hover:bg-white/10 focus:outline-none transition-colors"
             >
@@ -117,40 +111,65 @@ const Navbar = () => {
       </div>
 
       {/* Mobile menu */}
-      {isOpen && (
-        <div className="lg:hidden gradient-red border-t border-temple-gold/20 shadow-xl animate-in slide-in-from-top duration-300">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {user && (
-              <div className="px-3 py-4 border-b border-white/10 mb-2 flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-temple-gold uppercase font-bold tracking-widest">Namaste</p>
-                  <p className="text-lg font-serif font-bold">{user.name}</p>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden bg-temple-red/95 backdrop-blur-xl border-t border-white/10 shadow-2xl overflow-hidden"
+          >
+            <div className="px-4 pt-2 pb-8 space-y-2">
+              {user && (
+                <div className="px-4 py-6 border-b border-white/10 mb-4 flex items-center justify-between bg-white/5 rounded-2xl">
+                  <div>
+                    <p className="text-[10px] text-temple-gold uppercase font-bold tracking-[0.2em] mb-1">Namaste</p>
+                    <p className="text-xl font-serif font-bold text-white">{user.name}</p>
+                  </div>
+                  <button 
+                    onClick={logout} 
+                    className="p-3 bg-white/10 text-temple-gold rounded-xl active:scale-95 transition-transform"
+                    aria-label="Logout"
+                  >
+                    <LogOut size={20} />
+                  </button>
                 </div>
-                <button onClick={logout} className="p-2 bg-white/10 rounded-full"><LogOut size={20} /></button>
+              )}
+              
+              <div className="grid grid-cols-1 gap-1">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className="flex items-center justify-between px-4 py-4 rounded-xl text-base font-medium text-white/90 hover:bg-white/10 hover:text-temple-gold transition-all active:translate-x-2"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.name}
+                    <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all" />
+                  </Link>
+                ))}
               </div>
-            )}
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className="block px-3 py-3 rounded-xl text-base font-medium hover:bg-white/10 hover:text-temple-gold transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                {link.name}
-              </Link>
-            ))}
-            {!user && (
-              <Link
-                to="/login"
-                className="block px-3 py-3 rounded-xl text-base font-bold text-temple-gold border border-temple-gold/30 mt-4 text-center"
-                onClick={() => setIsOpen(false)}
-              >
-                Login / Register
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
+
+              {!user && (
+                <div className="pt-6 mt-4 border-t border-white/10 flex flex-col gap-3">
+                  <Link
+                    to="/login"
+                    className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl text-base font-bold bg-white text-temple-red shadow-lg active:scale-[0.98] transition-all"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <User size={20} />
+                    {t('nav.login') || 'Login / Register'}
+                  </Link>
+                </div>
+              )}
+              
+              <div className="pt-4 flex items-center justify-center">
+                 <div className="w-12 h-1.5 bg-white/20 rounded-full"></div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };

@@ -26,9 +26,9 @@ const Events = () => {
 
   return (
     <div>
-      <section className="gradient-red text-white py-20 px-4 text-center">
-        <h1 className="text-5xl font-serif mb-6">Upcoming Festivals</h1>
-        <p className="max-w-2xl mx-auto opacity-80">Mark your calendars for these divine celebrations and spiritual gatherings.</p>
+      <section className="gradient-mixed text-white py-12 md:py-20 px-4 text-center">
+        <h1 className="text-3xl md:text-5xl font-serif mb-4 md:mb-6">Upcoming Festivals</h1>
+        <p className="max-w-2xl mx-auto opacity-80 text-sm md:text-base">Mark your calendars for these divine celebrations and spiritual gatherings.</p>
       </section>
 
       <section className="py-20 px-4 max-w-5xl mx-auto">

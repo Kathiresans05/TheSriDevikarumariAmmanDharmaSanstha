@@ -82,14 +82,14 @@ const Donation = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <section className="bg-gradient-to-r from-temple-red to-temple-saffron text-white py-24 px-4 text-center relative overflow-hidden">
+      <section className="gradient-mixed text-white py-12 md:py-24 px-4 text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-0 left-0 w-64 h-64 border-8 border-white rounded-full -ml-32 -mt-32"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 border-8 border-white rounded-full -mr-48 -mb-48"></div>
+          <div className="absolute top-0 left-0 w-32 h-32 md:w-64 md:h-64 border-8 border-white rounded-full -ml-16 -mt-16 md:-ml-32 md:-mt-32"></div>
+          <div className="absolute bottom-0 right-0 w-48 h-48 md:w-96 md:h-96 border-8 border-white rounded-full -mr-24 -mb-24 md:-mr-48 md:-mb-48"></div>
         </div>
         <div className="relative z-10 max-w-3xl mx-auto">
-          <h1 className="text-5xl font-serif mb-6">Sacred Contribution (Daan)</h1>
-          <p className="text-xl opacity-90 leading-relaxed">
+          <h1 className="text-3xl md:text-5xl font-serif mb-4 md:mb-6">Sacred Contribution (Daan)</h1>
+          <p className="text-base md:text-xl opacity-90 leading-relaxed px-4">
             "Your contribution is a seed of Dharma that will grow into a tree of spiritual abundance for all."
           </p>
         </div>
@@ -262,7 +262,7 @@ const Donation = () => {
                   <button 
                     type="submit"
                     disabled={isSubmitting || isUploading}
-                    className="w-full bg-temple-red text-white py-4 rounded-2xl font-bold hover:bg-temple-saffron shadow-lg shadow-temple-red/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full bg-temple-red text-white py-4 rounded-2xl font-bold hover:bg-temple-saffron shadow-lg shadow-temple-red/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 min-h-[56px]"
                   >
                     {isSubmitting ? 'Processing...' : 'Confirm Submission'}
                   </button>

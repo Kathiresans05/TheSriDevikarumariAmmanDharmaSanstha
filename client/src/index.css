@@ -26,6 +26,10 @@
   background: linear-gradient(135deg, #b71c1c 0%, #d32f2f 100%);
 }
 
+.gradient-mixed {
+  background: linear-gradient(135deg, #b71c1c 0%, #FF9933 100%);
+}
+
 .gradient-saffron {
   background: linear-gradient(135deg, #FF9933 0%, #FF6600 100%);
 }

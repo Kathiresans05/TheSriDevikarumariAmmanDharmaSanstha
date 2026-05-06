@@ -3,7 +3,7 @@ import { CreditCard, Landmark, QrCode, Heart, LogIn, CheckCircle2, X } from 'luc
 import { useNavigate } from 'react-router-dom';
 import { useTemple } from '../context/TempleContext';
 
-const API_BASE = `http://${window.location.hostname}:5001/api`;
+const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5001/api`;
 
 const Donation = () => {
   const { user, submitDonation } = useTemple();

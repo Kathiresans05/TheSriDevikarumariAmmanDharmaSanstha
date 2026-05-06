@@ -16,7 +16,7 @@ import {
 
 import { useTemple } from '../../context/TempleContext';
 
-const API_BASE = `http://${window.location.hostname}:5001/api`;
+const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5001/api`;
 
 const AdminDashboard = () => {
   const { templeData, updateTempleData } = useTemple();

@@ -46,50 +46,46 @@ const Navbar = () => {
           </div>
           
           <div className="hidden lg:block">
-            <div className="ml-10 flex items-center space-x-6">
+            <div className="ml-8 flex items-center space-x-6">
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className="px-1 py-2 text-sm font-medium hover:text-temple-gold transition-all relative group"
+                  className="whitespace-nowrap text-sm font-bold text-white hover:text-temple-gold transition-colors relative group py-1"
                 >
                   {link.name}
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-temple-gold transition-all group-hover:w-full"></span>
                 </Link>
               ))}
               
-              <div className="flex items-center gap-4 pl-4 border-l border-white/20">
+              <div className="flex items-center gap-3 pl-4 border-l border-white/20">
                 {user ? (
                   <div className="flex items-center gap-3">
-                    <div className="flex flex-col items-end">
-                      <span className="text-xs font-bold text-temple-gold uppercase tracking-tighter">Namaste</span>
-                      <span className="text-sm font-medium">{user.name.split(' ')[0]}</span>
-                    </div>
+                    <span className="text-sm font-bold text-temple-gold uppercase">{user.name.split(' ')[0]}</span>
                     <button 
                       onClick={logout}
                       className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
-                      title="Logout"
                     >
-                      <LogOut size={18} className="text-temple-gold" />
+                      <LogOut size={16} className="text-white" />
                     </button>
                   </div>
                 ) : (
                   <Link 
                     to="/login" 
-                    className="flex items-center gap-2 bg-white text-temple-red px-6 py-2 rounded-full text-sm font-bold hover:bg-temple-gold transition-all shadow-md active:scale-95"
+                    className="flex items-center gap-2 bg-white text-temple-red px-6 py-2 rounded-full text-sm font-bold hover:bg-temple-gold hover:text-white transition-all shadow-md active:scale-95 whitespace-nowrap"
                   >
                     <User size={16} />
                     {t('nav.login') || 'Login'}
                   </Link>
                 )}
 
-                <Link 
-                  to="/donations" 
-                  className="hidden md:flex items-center gap-2 bg-temple-gold text-temple-red px-5 py-2 rounded-full text-sm font-bold hover:bg-white transition-all shadow-md active:scale-95"
+                <button 
+                  onClick={toggleLanguage}
+                  className="flex items-center gap-2 bg-temple-gold text-temple-red px-5 py-2 rounded-full text-sm font-bold hover:bg-white transition-all shadow-md active:scale-95 whitespace-nowrap uppercase"
                 >
-                  <Heart size={16} fill="currentColor" />
-                  Donate
-                </Link>
+                  <Globe size={16} />
+                  {i18n.language === 'en' ? 'English' : 'தமிழ்'}
+                </button>
               </div>
             </div>
           </div>

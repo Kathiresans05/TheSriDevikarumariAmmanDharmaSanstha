@@ -35,7 +35,7 @@ const Donation = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch(`http://${window.location.hostname}:5001/api/upload`, {
+      const response = await fetch(`${API_BASE}/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -47,7 +47,8 @@ const Donation = () => {
       setReceiptUrl(data.url);
     } catch (err) {
       console.error('Upload failed:', err);
-      alert('Receipt upload failed: ' + err.message + '. Please check if server is running on port 5001.');
+      // Upload failed but don't block the form — Transaction ID is enough
+      alert('Receipt upload failed (optional). You can still submit with your Transaction ID.');
     } finally {
       setIsUploading(false);
     }
@@ -55,10 +56,6 @@ const Donation = () => {
 
   const handleConfirmDonation = async (e) => {
     e.preventDefault();
-    if (!receiptUrl) {
-      alert('Please upload your payment receipt screenshot first.');
-      return;
-    }
     setIsSubmitting(true);
     
     const result = await submitDonation({
@@ -241,7 +238,7 @@ const Donation = () => {
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">Upload Receipt Screenshot</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">Upload Receipt Screenshot <span className="text-gray-300 normal-case font-normal">(Optional)</span></label>
                     <div className={`relative border-2 border-dashed rounded-2xl p-4 text-center transition-all ${receiptUrl ? 'border-green-200 bg-green-50' : 'border-gray-200 hover:border-temple-red'}`}>
                       {isUploading ? (
                         <div className="py-2 text-sm text-gray-500 animate-pulse">Uploading...</div>

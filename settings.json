@@ -1,0 +1,30 @@
+{
+  "name": "The Sri Devikarumari Amman Dharma Sanstha",
+  "email": "info@devikarumari.org",
+  "phone": "+91 44 2680 0430",
+  "address": "Vishnu Garden, Tilak Nagar Road, West Delhi.",
+  "timings": {
+    "morning": {
+      "open": "06:00 AM",
+      "close": "12:30 PM"
+    },
+    "evening": {
+      "open": "04:00 PM",
+      "close": "09:00 PM"
+    }
+  },
+  "sevas": [
+    {
+      "id": 1777999697261,
+      "name": "morning pooja",
+      "price": "201",
+      "desc": "Morning pooja (Nitya Puja) is a daily Hindu ritual performed after bathing to invoke divine blessings, starting the day with peace and focus"
+    },
+    {
+      "id": 1778000413512,
+      "name": "Evening pooja",
+      "price": "501",
+      "desc": "Preparation: Bathe and wear clean, preferably cotton, clothes. Prepare the altar by cleaning it and arranging the murti or image"
+    }
+  ]
+}

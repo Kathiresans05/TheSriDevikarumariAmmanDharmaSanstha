@@ -11,6 +11,8 @@ import Donation from './pages/Donation';
 import Contact from './pages/Contact';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminLogin from './pages/admin/AdminLogin';
+import UserLogin from './pages/auth/UserLogin';
+import UserRegister from './pages/auth/UserRegister';
 import { TempleProvider } from './context/TempleContext';
 import './i18n/config';
 
@@ -36,6 +38,8 @@ const AppContent = () => {
           <Route path="/events" element={<Events />} />
           <Route path="/donations" element={<Donation />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/login" element={<UserLogin />} />
+          <Route path="/register" element={<UserRegister />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route 
             path="/admin" 

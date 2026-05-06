@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -10,40 +10,257 @@ import {
   Bell,
   Search,
   Plus,
-  Star
+  Star,
+  Edit
 } from 'lucide-react';
 
 import { useTemple } from '../../context/TempleContext';
+
+const API_BASE = `http://${window.location.hostname}:5001/api`;
 
 const AdminDashboard = () => {
   const { templeData, updateTempleData } = useTemple();
   const [activeTab, setActiveTab] = useState('overview');
   const [isSaving, setIsSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  
+  const [isUploading, setIsUploading] = useState(false);
+  const [adminBookings, setAdminBookings] = useState([]);
+  const [adminDonations, setAdminDonations] = useState([]);
+  const [isFetching, setIsFetching] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchBookings();
+    fetchDonations();
+  }, []);
+
+  const fetchDonations = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/donations`);
+      if (response.ok) {
+        const data = await response.json();
+        setAdminDonations(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch donations:', err);
+    }
+  };
+
+  const fetchBookings = async () => {
+    setIsFetching(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_BASE}/admin/bookings`);
+      if (response.ok) {
+        const data = await response.json();
+        setAdminBookings(data);
+      } else {
+        const errData = await response.json();
+        setError(`Server Error: ${errData.error || 'Unknown'}`);
+      }
+    } catch (err) {
+      console.error('Failed to fetch bookings:', err);
+      setError(`Connection error: ${err.message}`);
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  const handleStatusUpdate = async (userId, bookingId, newStatus) => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/bookings/${userId}/${bookingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (response.ok) {
+        fetchBookings();
+      }
+    } catch (err) {
+      console.error('Failed to update status:', err);
+    }
+  };
+
+  const handleDonationStatusUpdate = async (userId, donationId, newStatus) => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/donations/${userId}/${donationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (response.ok) {
+        fetchDonations();
+      }
+    } catch (err) {
+      console.error('Failed to update donation status:', err);
+    }
+  };
+
   // Local form state
   const [formData, setFormData] = useState(templeData);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState('image'); // 'image', 'video', 'booking', 'event'
-  const [modalData, setModalData] = useState({ name: '', title: '', price: '', desc: '', date: '', src: '', icon: 'ॐ' });
+  const [modalData, setModalData] = useState({ name: '', title: '', price: '', desc: '', date: '', src: '', icon: 'ॐ', isFeatured: false });
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  const handleEditClick = (seva) => {
+    setModalType('seva');
+    setModalData({
+      id: seva.id,
+      name: seva.name,
+      price: seva.price,
+      desc: seva.desc,
+      icon: seva.icon || 'ॐ',
+      isFeatured: seva.isFeatured || false
+    });
+    setIsEditMode(true);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteSeva = (id) => {
+    if (window.confirm('Are you sure you want to delete this seva?')) {
+      let newData = { ...templeData };
+      newData.sevas = newData.sevas.filter(s => s.id !== id);
+      updateTempleData(newData);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }
+  };
+
+  const handleDeleteGalleryItem = (id) => {
+    if (window.confirm('Are you sure you want to delete this image?')) {
+      let newData = { ...templeData };
+      newData.gallery = newData.gallery.filter(item => item.id !== id);
+      updateTempleData(newData);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }
+  };
+
+  const handleEditGalleryItem = (item) => {
+    setModalType('image');
+    setModalData({
+      id: item.id,
+      src: item.url,
+      title: item.title,
+      isFeatured: item.isFeatured || false
+    });
+    setIsEditMode(true);
+    setIsModalOpen(true);
+  };
+
+  const handleToggleFeaturedSeva = (id) => {
+    let newData = { ...templeData };
+    newData.sevas = newData.sevas.map(s => 
+      s.id === id ? { ...s, isFeatured: !s.isFeatured } : s
+    );
+    updateTempleData(newData);
+  };
+
+  const handleToggleFeaturedGallery = (id) => {
+    let newData = { ...templeData };
+    newData.gallery = newData.gallery.map(item => 
+      item.id === id ? { ...item, isFeatured: !item.isFeatured } : item
+    );
+    updateTempleData(newData);
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch(`${API_BASE}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      setModalData({ ...modalData, src: data.url });
+      setIsUploading(false);
+    } catch (err) {
+      console.error('Upload failed:', err);
+      alert('Upload failed. Please try again.');
+      setIsUploading(false);
+    }
+  };
 
   const handleAddEntry = () => {
+    if (isUploading) {
+      alert('Please wait for the upload to complete');
+      return;
+    }
     let newData = { ...templeData };
     
     if (modalType === 'seva') {
-      const newSeva = {
-        id: Date.now(),
-        name: modalData.name || modalData.title,
-        price: modalData.price,
-        desc: modalData.desc,
-        icon: modalData.icon || 'ॐ'
-      };
-      newData.sevas = [...(newData.sevas || []), newSeva];
+      if (isEditMode) {
+        newData.sevas = newData.sevas.map(s => 
+          s.id === modalData.id 
+          ? { ...s, name: modalData.name, price: modalData.price, desc: modalData.desc, icon: modalData.icon, isFeatured: modalData.isFeatured } 
+          : s
+        );
+      } else {
+        const newSeva = {
+          id: Date.now(),
+          name: modalData.name || modalData.title,
+          price: modalData.price,
+          desc: modalData.desc,
+          icon: modalData.icon || 'ॐ',
+          isFeatured: modalData.isFeatured || false
+        };
+        newData.sevas = [...(newData.sevas || []), newSeva];
+      }
+    }
+
+    if (modalType === 'festival' || modalType === 'event') {
+      const type = modalType === 'festival' ? 'Festival' : 'Event';
+      if (isEditMode) {
+        newData.events = newData.events.map(ev => 
+          ev.id === modalData.id 
+          ? { ...ev, title: modalData.title, date: modalData.date, time: modalData.time, desc: modalData.desc, attendees: modalData.attendees, type, isFeatured: modalData.isFeatured, image: modalData.src } 
+          : ev
+        );
+      } else {
+        const newEntry = {
+          id: Date.now().toString(),
+          title: modalData.title,
+          date: modalData.date,
+          time: modalData.time || (modalType === 'festival' ? 'Full Day' : ''),
+          desc: modalData.desc,
+          attendees: modalData.attendees || '0',
+          type,
+          isFeatured: modalData.isFeatured || false,
+          image: modalData.src || ''
+        };
+        newData.events = [...(newData.events || []), newEntry];
+      }
+    }
+
+    if (modalType === 'image' || modalType === 'video') {
+      if (isEditMode) {
+        newData.gallery = newData.gallery.map(item => 
+          item.id === modalData.id 
+          ? { ...item, url: modalData.src, title: modalData.title, isFeatured: modalData.isFeatured } 
+          : item
+        );
+      } else {
+        const newMedia = {
+          id: Date.now().toString(),
+          url: modalData.src || '/hero-temple.png',
+          title: modalData.title || 'Temple Media',
+          isFeatured: modalData.isFeatured || false
+        };
+        newData.gallery = [...(newData.gallery || []), newMedia];
+      }
     }
 
     updateTempleData(newData);
     setIsModalOpen(false);
-    setModalData({ name: '', title: '', price: '', desc: '', date: '', src: '' });
+    setIsEditMode(false);
+    setModalData({ name: '', title: '', price: '', desc: '', date: '', src: '', icon: 'ॐ', isFeatured: false });
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
@@ -59,10 +276,13 @@ const AdminDashboard = () => {
   };
 
   const stats = [
-    { label: 'Total Bookings', value: '1,284', icon: Calendar, color: 'bg-blue-500' },
-    { label: 'Total Donations', value: '₹ 4,52,000', icon: Heart, color: 'bg-red-500' },
-    { label: 'Monthly Visitors', value: '12,500', icon: Users, color: 'bg-green-500' },
-    { label: 'Active Events', value: '5', icon: ImageIcon, color: 'bg-purple-500' },
+    { label: 'Total Bookings', value: adminBookings.length, icon: Calendar, color: 'bg-blue-500' },
+    { label: 'Total Revenue', value: `₹ ${(
+      adminBookings.reduce((acc, curr) => acc + parseInt(curr.amount.replace(/[^0-9]/g, '') || 0), 0) +
+      adminDonations.reduce((acc, curr) => acc + parseInt(curr.amount.replace(/[^0-9]/g, '') || 0), 0)
+    ).toLocaleString()}`, icon: Heart, color: 'bg-red-500' },
+    { label: 'Active Events', value: templeData.events?.length || 0, icon: Users, color: 'bg-green-500' },
+    { label: 'Gallery Items', value: templeData.gallery?.length || 0, icon: ImageIcon, color: 'bg-purple-500' },
   ];
 
   const recentBookings = [
@@ -71,6 +291,11 @@ const AdminDashboard = () => {
     { id: 3, user: 'Meena Iyer', pooja: 'Laksharchana', date: '2026-05-15', status: 'Confirmed' },
     { id: 4, user: 'Anand Dev', pooja: 'Annadhanam', date: '2026-05-08', status: 'Completed' },
   ];
+
+  const getSevaName = (id) => {
+    const seva = templeData.sevas?.find(s => s.id === id || s.id === parseInt(id));
+    return seva ? seva.name : 'Unknown Pooja';
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 font-sans">
@@ -100,7 +325,7 @@ const AdminDashboard = () => {
           ].map((item) => (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => { setActiveTab(item.id); if(item.id === 'bookings') fetchBookings(); if(item.id === 'donations') fetchDonations(); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group ${
                 activeTab === item.id 
                 ? 'bg-temple-gold text-temple-red shadow-lg shadow-temple-gold/20 scale-[1.02]' 
@@ -156,7 +381,7 @@ const AdminDashboard = () => {
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-2xl font-serif font-bold text-gray-800">Dashboard Overview</h2>
                 <button 
-                  onClick={() => { setModalType('booking'); setIsModalOpen(true); }}
+                  onClick={() => { setModalType('booking'); setIsEditMode(false); setIsModalOpen(true); }}
                   className="bg-temple-red text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-temple-saffron transition-all shadow-md active:scale-95"
                 >
                   <Plus size={18} /> Add New Entry
@@ -197,16 +422,16 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {recentBookings.map((booking) => (
-                      <tr key={booking.id} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="px-6 py-4 text-sm text-gray-400">#00{booking.id}</td>
+                    {adminBookings.slice(0, 5).map((booking) => (
+                      <tr key={booking.bookingId} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-4 text-sm text-gray-400">#{booking.bookingId.slice(-4)}</td>
                         <td className="px-6 py-4">
-                          <p className="text-sm font-bold text-gray-800">{booking.user}</p>
+                          <p className="text-sm font-bold text-gray-800">{booking.devoteeName}</p>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded">{booking.pooja}</span>
+                          <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded">{getSevaName(booking.pooja)}</span>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{booking.date}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{new Date(booking.date).toLocaleDateString()}</td>
                         <td className="px-6 py-4">
                           <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded ${
                             booking.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
@@ -251,34 +476,44 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {[
-                      { id: '101', name: 'Rajesh Kumar', pooja: 'Abishekam', date: 'Oct 10, 2026', time: '06:00 AM', status: 'Confirmed', amount: '₹ 501' },
-                      { id: '102', name: 'Senthil Mani', pooja: 'Thanga Ratham', date: 'Oct 12, 2026', time: '10:30 AM', status: 'Pending', amount: '₹ 5,000' },
-                      { id: '103', name: 'Meena Iyer', pooja: 'Laksharchana', date: 'Oct 15, 2026', time: '09:00 AM', status: 'Confirmed', amount: '₹ 1,001' },
-                      { id: '104', name: 'Anand Dev', pooja: 'Annadhanam', date: 'Oct 08, 2026', time: '12:00 PM', status: 'Completed', amount: '₹ 10,001' },
-                      { id: '105', name: 'Vijay Ram', pooja: 'Archana', date: 'Oct 20, 2026', time: '05:30 PM', status: 'Confirmed', amount: '₹ 101' },
-                    ].map((row) => (
-                      <tr key={row.id} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="px-6 py-4 text-sm text-gray-400">#{row.id}</td>
-                        <td className="px-6 py-4 text-sm font-bold text-gray-800">{row.name}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{row.pooja}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{row.date}<br/><span className="text-[10px] text-gray-400">{row.time}</span></td>
-                        <td className="px-6 py-4">
-                          <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded ${
-                            row.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
-                            row.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-blue-100 text-blue-700'
-                          }`}>
-                            {row.status}
-                          </span>
+                    {isFetching ? (
+                      <tr><td colSpan="7" className="px-6 py-10 text-center text-gray-400">Loading bookings...</td></tr>
+                    ) : error ? (
+                      <tr><td colSpan="7" className="px-6 py-10 text-center text-red-500 font-bold">{error}</td></tr>
+                    ) : adminBookings.length > 0 ? adminBookings.map((booking) => (
+                      <tr key={booking.bookingId} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-4 text-sm text-gray-400">#{booking.bookingId.slice(-4)}</td>
+                        <td className="px-6 py-4 text-sm font-bold text-gray-800">{booking.devoteeName}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{getSevaName(booking.pooja)}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {new Date(booking.date).toLocaleDateString()}
+                          <br/><span className="text-[10px] text-gray-400">{booking.time}</span>
                         </td>
-                        <td className="px-6 py-4 text-sm font-bold text-temple-red">{row.amount}</td>
-                        <td className="px-6 py-4 flex gap-2">
-                          <button className="text-gray-400 hover:text-blue-600 transition-colors"><Plus size={16} /></button>
-                          <button className="text-gray-400 hover:text-red-600 transition-colors"><LogOut size={16} /></button>
+                        <td className="px-6 py-4">
+                          <select 
+                            value={booking.status}
+                            onChange={(e) => handleStatusUpdate(booking.userId, booking.bookingId, e.target.value)}
+                            className={`text-[10px] uppercase font-bold px-2 py-1 rounded outline-none border-none cursor-pointer ${
+                              booking.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
+                              booking.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-blue-100 text-blue-700'
+                            }`}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Confirmed">Confirmed</option>
+                            <option value="Completed">Completed</option>
+                          </select>
+                        </td>
+                        <td className="px-6 py-4 text-sm font-bold text-temple-red">{booking.amount}</td>
+                        <td className="px-6 py-4">
+                          <button className="text-gray-400 hover:text-blue-600 transition-colors"><Search size={16} /></button>
                         </td>
                       </tr>
-                    ))}
+                    )) : (
+                      <tr>
+                        <td colSpan="7" className="px-6 py-10 text-center text-gray-400">No bookings found in database</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -289,28 +524,74 @@ const AdminDashboard = () => {
             <div className="space-y-8">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-serif font-bold text-gray-800">Donation History</h2>
-                <div className="bg-green-50 text-green-700 px-4 py-2 rounded-xl text-sm font-bold">Total this month: ₹ 1,24,000</div>
+                <div className="bg-green-50 text-green-700 px-4 py-2 rounded-xl text-sm font-bold">
+                  Total Verified: ₹ {adminDonations.filter(d => d.status === 'Verified').reduce((acc, curr) => acc + parseInt(curr.amount.replace(/[^0-9]/g, '') || 0), 0).toLocaleString()}
+                </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[
-                  { name: 'Dr. Subramanian', amount: '₹ 25,000', cause: 'Temple Renovation', date: '2 hours ago' },
-                  { name: 'Anonymous Devotee', amount: '₹ 5,000', cause: 'Daily Annadhanam', date: '5 hours ago' },
-                  { name: 'Mrs. Lakshmi Narayanan', amount: '₹ 10,001', cause: 'Goshala Maintenance', date: '1 day ago' },
-                  { name: 'Siva & Family', amount: '₹ 1,116', cause: 'Lamp Oil Seva', date: '2 days ago' },
-                ].map((don, i) => (
-                  <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="w-10 h-10 bg-temple-red/10 text-temple-red rounded-full flex items-center justify-center">
-                        <Heart size={20} />
-                      </div>
-                      <span className="text-xs text-gray-400 italic">{don.date}</span>
-                    </div>
-                    <h4 className="font-bold text-gray-800 mb-1">{don.name}</h4>
-                    <p className="text-2xl font-serif font-bold text-temple-red mb-3">{don.amount}</p>
-                    <p className="text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full inline-block">{don.cause}</p>
-                  </div>
-                ))}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-400 text-[10px] uppercase tracking-widest">
+                      <th className="px-6 py-4">Devotee</th>
+                      <th className="px-6 py-4">Cause</th>
+                      <th className="px-6 py-4">Transaction ID</th>
+                      <th className="px-6 py-4">Receipt</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4">Amount</th>
+                      <th className="px-6 py-4">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {adminDonations.length > 0 ? adminDonations.map((don, i) => (
+                      <tr key={don.id || i} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <p className="text-sm font-bold text-gray-800">{don.devoteeName}</p>
+                          <p className="text-[10px] text-gray-400">{new Date(don.date).toLocaleDateString()}</p>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{don.cause}</td>
+                        <td className="px-6 py-4 text-xs font-mono text-gray-500">{don.transactionId || 'N/A'}</td>
+                        <td className="px-6 py-4">
+                          {don.receipt ? (
+                            <a href={don.receipt} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-xs flex items-center gap-1">
+                              View <ImageIcon size={12} />
+                            </a>
+                          ) : 'No Receipt'}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded ${
+                            don.status === 'Verified' ? 'bg-green-100 text-green-700' :
+                            don.status === 'Rejected' ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {don.status || 'Pending'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm font-bold text-temple-red">{don.amount}</td>
+                        <td className="px-6 py-4">
+                          {don.status !== 'Verified' && (
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => handleDonationStatusUpdate(don.userId, don.id, 'Verified')}
+                                className="text-xs font-bold text-green-600 hover:underline"
+                              >
+                                Verify
+                              </button>
+                              <button 
+                                onClick={() => handleDonationStatusUpdate(don.userId, don.id, 'Rejected')}
+                                className="text-xs font-bold text-red-400 hover:underline"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr><td colSpan="7" className="px-6 py-10 text-center text-gray-400">No donations found in database</td></tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
@@ -324,13 +605,13 @@ const AdminDashboard = () => {
                 </div>
                 <div className="flex gap-3">
                   <button 
-                    onClick={() => { setModalType('image'); setIsModalOpen(true); }}
+                    onClick={() => { setModalType('image'); setIsEditMode(false); setIsModalOpen(true); }}
                     className="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 transition-all flex items-center gap-2 active:scale-95"
                   >
                     <ImageIcon size={18} /> Add Image
                   </button>
                   <button 
-                    onClick={() => { setModalType('video'); setIsModalOpen(true); }}
+                    onClick={() => { setModalType('video'); setIsEditMode(false); setIsModalOpen(true); }}
                     className="bg-temple-red text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-temple-saffron transition-all shadow-md flex items-center gap-2 active:scale-95"
                   >
                     <Plus size={18} /> Add Video
@@ -340,35 +621,46 @@ const AdminDashboard = () => {
 
               {/* Media Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                {[
-                  { type: 'image', src: '/hero-temple.png' },
-                  { type: 'video', src: '/hero-night.png', label: 'Temple Evening Aarti' },
-                  { type: 'image', src: '/hero-pond.png' },
-                  { type: 'video', src: '/hero-festival.png', label: 'Navaratri Celebrations' },
-                  { type: 'image', src: '/hero-temple.png' },
-                ].map((item, i) => (
-                  <div key={i} className="group relative aspect-video md:aspect-square bg-gray-100 rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+                {templeData.gallery?.map((item) => (
+                  <div key={item.id} className="group relative aspect-video md:aspect-square bg-gray-100 rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
                     <img 
-                      src={item.src} 
+                      src={item.url} 
                       className="w-full h-full object-cover transition-transform group-hover:scale-110" 
-                      alt="Gallery Asset"
+                      alt={item.title}
                     />
-                    {item.type === 'video' && (
-                      <div className="absolute top-2 right-2 bg-temple-red text-white p-1.5 rounded-lg shadow-lg">
-                        <Plus size={14} className="rotate-45" /> {/* Video Icon placeholder */}
-                      </div>
-                    )}
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-4 text-center">
-                      {item.type === 'video' && <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mb-2"><Plus size={20} className="text-white" /></div>}
-                      <p className="text-white text-[10px] font-bold uppercase tracking-widest mb-3">{item.type}</p>
+                      <p className="text-white text-[10px] font-bold uppercase tracking-widest mb-3">IMAGE</p>
+                      <p className="text-white text-xs font-medium mb-4 line-clamp-1">{item.title}</p>
                       <div className="flex gap-2">
-                        <button className="p-2 bg-white text-gray-800 rounded-lg hover:bg-temple-gold transition-colors"><Search size={16} /></button>
-                        <button className="p-2 bg-white text-red-600 rounded-lg hover:bg-red-50 transition-colors"><LogOut size={16} /></button>
+                        <button 
+                          onClick={() => handleToggleFeaturedGallery(item.id)}
+                          className={`p-2 rounded-lg transition-colors ${item.isFeatured ? 'bg-temple-gold text-white' : 'bg-white/20 text-white hover:bg-temple-gold'}`}
+                          title="Feature on Home"
+                        >
+                          <Star size={16} fill={item.isFeatured ? 'currentColor' : 'none'} />
+                        </button>
+                        <button 
+                          onClick={() => handleEditGalleryItem(item)}
+                          className="p-2 bg-white text-gray-800 rounded-lg hover:bg-temple-gold hover:text-white transition-colors"
+                          title="Edit Image"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteGalleryItem(item.id)}
+                          className="p-2 bg-white text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                          title="Delete Image"
+                        >
+                          <LogOut size={16} />
+                        </button>
                       </div>
                     </div>
                   </div>
                 ))}
-                <button className="aspect-square border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center text-gray-400 hover:border-temple-gold hover:text-temple-gold transition-all hover:bg-gray-50">
+                <button 
+                  onClick={() => { setModalType('image'); setIsEditMode(false); setIsModalOpen(true); }}
+                  className="aspect-square border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center text-gray-400 hover:border-temple-gold hover:text-temple-gold transition-all hover:bg-gray-50"
+                >
                   <Plus size={32} />
                   <span className="text-xs font-bold mt-2">Add Media</span>
                 </button>
@@ -377,45 +669,56 @@ const AdminDashboard = () => {
           )}
 
           {activeTab === 'events' && (
-            <div className="space-y-8">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-serif font-bold text-gray-800">Festival & Event Calendar</h2>
-                <button 
-                  onClick={() => { setModalType('event'); setIsModalOpen(true); }}
-                  className="bg-temple-red text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-temple-saffron transition-all active:scale-95 shadow-md"
-                >
-                  <Plus size={18} /> Add Event
-                </button>
-              </div>
-              <div className="space-y-4">
-                {[
-                  { name: 'Navaratri Festival', date: 'Oct 15 - Oct 24, 2026', type: 'Grand Festival', attendees: '50,000+' },
-                  { name: 'Deepavali Special Pooja', date: 'Nov 01, 2026', type: 'Special Pooja', attendees: '15,000+' },
-                  { name: 'Karthigai Deepam', date: 'Nov 20, 2026', type: 'Lamp Festival', attendees: '25,000+' },
-                  { name: 'Pournami Abishekam', date: 'Dec 05, 2026', type: 'Monthly Ritual', attendees: '5,000+' },
-                ].map((ev, i) => (
-                  <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:border-temple-gold transition-colors">
-                    <div className="flex items-center gap-6">
-                      <div className="w-14 h-14 bg-temple-gold/10 text-temple-gold rounded-xl flex flex-col items-center justify-center font-bold">
-                        <span className="text-[10px] uppercase">OCT</span>
-                        <span className="text-xl leading-none">15</span>
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-gray-800">{ev.name}</h4>
-                        <p className="text-sm text-gray-500">{ev.date}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-12">
-                      <div className="text-right hidden md:block">
-                        <p className="text-xs text-gray-400 uppercase font-bold tracking-widest">Expected Crowd</p>
-                        <p className="text-sm font-bold text-gray-700">{ev.attendees}</p>
-                      </div>
-                      <span className="bg-gray-100 text-gray-600 text-[10px] uppercase font-bold px-3 py-1 rounded-full">{ev.type}</span>
-                      <button className="text-temple-red font-bold text-sm hover:underline">Edit</button>
-                    </div>
+            <div className="space-y-12">
+              {/* Festival Section */}
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-serif font-bold text-gray-800">Events</h2>
+                    <p className="text-sm text-gray-500">Upcoming festivals and sacred events</p>
                   </div>
-                ))}
+                  <button 
+                    onClick={() => { setModalType('event'); setIsEditMode(false); setModalData({ title: '', date: '', time: 'Full Day', type: 'Event', desc: '', attendees: '', isFeatured: true }); setIsModalOpen(true); }}
+                    className="bg-temple-red text-white px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-temple-saffron transition-all shadow-md"
+                  >
+                    <Plus size={18} /> Add Event
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {templeData.events?.map((ev, i) => (
+                    <div key={ev.id || i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:border-temple-gold transition-colors">
+                      <div className="flex items-center gap-6">
+                        <div className="w-14 h-14 bg-temple-gold/10 text-temple-gold rounded-xl flex flex-col items-center justify-center font-bold">
+                          <span className="text-[10px] uppercase">{ev.date ? ev.date.split(' ')[0] : 'TBD'}</span>
+                          <span className="text-xl leading-none">{ev.date && ev.date.split(' ')[1] ? ev.date.split(' ')[1].replace(',', '') : '-'}</span>
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-gray-800">{ev.title}</h4>
+                          <p className="text-sm text-gray-500">{ev.date}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-12">
+                        <div className="text-right hidden md:block">
+                          <p className="text-xs text-gray-400 uppercase font-bold tracking-widest">Expected Crowd</p>
+                          <p className="text-sm font-bold text-gray-700">{ev.attendees}</p>
+                        </div>
+                        <span className="bg-temple-red/10 text-temple-red text-[10px] uppercase font-bold px-3 py-1 rounded-full border border-temple-red/20">{ev.type}</span>
+                        <div className="flex gap-2">
+                          <button onClick={() => { setModalType('event'); setModalData({...ev, src: ev.image}); setIsEditMode(true); setIsModalOpen(true); }} className="text-blue-500 font-bold text-sm hover:underline">Edit</button>
+                          <button onClick={() => { if(window.confirm('Delete this event?')) { updateTempleData({ ...templeData, events: templeData.events.filter(e => e.id !== ev.id) }) } }} className="text-red-500 font-bold text-sm hover:underline ml-4">Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {(!templeData.events || templeData.events.length === 0) && (
+                    <div className="text-center py-10 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400">
+                      No events added yet.
+                    </div>
+                  )}
+                </div>
               </div>
+
+
             </div>
           )}
 
@@ -427,7 +730,7 @@ const AdminDashboard = () => {
                   <p className="text-sm text-gray-500 mt-1">Configure the sacred offerings and their pricing</p>
                 </div>
                 <button 
-                  onClick={() => { setModalType('seva'); setIsModalOpen(true); }}
+                  onClick={() => { setModalType('seva'); setIsEditMode(false); setIsModalOpen(true); }}
                   className="bg-temple-red text-white px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-temple-saffron transition-all shadow-md"
                 >
                   <Plus size={18} /> Add New Seva
@@ -440,15 +743,36 @@ const AdminDashboard = () => {
                     <div className="flex justify-between items-start mb-4">
                       <div className="w-12 h-12 bg-temple-gold/10 text-temple-gold rounded-xl flex items-center justify-center font-bold text-xl">{seva.icon || 'ॐ'}</div>
                       <div className="flex gap-1">
-                        <button className="p-2 text-gray-400 hover:text-blue-500 transition-colors"><Search size={16} /></button>
-                        <button className="p-2 text-gray-400 hover:text-red-500 transition-colors"><LogOut size={16} className="rotate-45" /></button>
+                        <button 
+                          onClick={() => handleToggleFeaturedSeva(seva.id)}
+                          className={`p-2 rounded-lg transition-colors ${seva.isFeatured ? 'text-temple-gold' : 'text-gray-400 hover:text-temple-gold'}`}
+                        >
+                          <Star size={16} fill={seva.isFeatured ? 'currentColor' : 'none'} />
+                        </button>
+                        <button 
+                          onClick={() => handleEditClick(seva)}
+                          className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+                        >
+                          <Search size={16} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteSeva(seva.id)}
+                          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <LogOut size={16} className="rotate-45" />
+                        </button>
                       </div>
                     </div>
                     <h4 className="font-bold text-gray-800 mb-2">{seva.name}</h4>
                     <p className="text-sm text-gray-500 mb-6 leading-relaxed line-clamp-2">{seva.desc}</p>
                     <div className="flex justify-between items-center pt-4 border-t border-gray-50">
                       <span className="text-temple-red font-bold">{seva.price}</span>
-                      <button className="text-xs font-bold text-temple-gold uppercase tracking-widest hover:underline">Edit Details</button>
+                      <button 
+                        onClick={() => handleEditClick(seva)}
+                        className="text-xs font-bold text-temple-gold uppercase tracking-widest hover:underline"
+                      >
+                        Edit Details
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -592,8 +916,10 @@ const AdminDashboard = () => {
           <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
           <div className="bg-white rounded-[32px] w-full max-w-xl relative z-10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
             <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <h3 className="text-2xl font-serif font-bold text-gray-800 capitalize">Add New {modalType}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <h3 className="text-2xl font-serif font-bold text-gray-800 capitalize">
+                {isEditMode ? 'Edit' : 'Add New'} {modalType}
+              </h3>
+              <button onClick={() => { setIsModalOpen(false); setIsEditMode(false); }} className="text-gray-400 hover:text-gray-600 transition-colors">
                 <Plus size={24} className="rotate-45" />
               </button>
             </div>
@@ -601,22 +927,60 @@ const AdminDashboard = () => {
             <div className="p-8 space-y-6">
               {modalType === 'image' || modalType === 'video' ? (
                 <div className="space-y-4">
-                  <div className="border-2 border-dashed border-gray-200 rounded-3xl p-12 text-center hover:border-temple-gold transition-colors cursor-pointer group">
-                    <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-temple-gold/10 group-hover:text-temple-gold transition-all">
-                      <Plus size={32} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-gray-400 uppercase">Upload File (Cloudinary)</label>
+                      <div className="mt-2 relative">
+                        <input 
+                          type="file" 
+                          onChange={handleFileUpload}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                        />
+                        <div className={`w-full p-3 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 transition-all ${isUploading ? 'border-temple-gold bg-temple-gold/5 animate-pulse' : 'border-gray-200 hover:border-temple-gold'}`}>
+                          {isUploading ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-temple-gold border-t-transparent rounded-full animate-spin"></div>
+                              <span className="text-xs font-bold text-temple-gold">Uploading to Cloudinary...</span>
+                            </>
+                          ) : (
+                            <>
+                              <ImageIcon size={16} className="text-gray-400" />
+                              <span className="text-xs font-bold text-gray-500">Choose Image/Video</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <p className="font-bold text-gray-800">Click to upload or drag and drop</p>
-                    <p className="text-xs text-gray-400 mt-2">Maximum file size: 10MB</p>
+                    <div>
+                      <label className="text-xs font-bold text-gray-400 uppercase">Or Image URL</label>
+                      <input 
+                        type="text" 
+                        value={modalData.src}
+                        onChange={(e) => setModalData({...modalData, src: e.target.value})}
+                        className="w-full mt-2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none focus:border-temple-gold transition-all" 
+                        placeholder="https://example.com/image.jpg" 
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase">Description / Caption</label>
+                    <label className="text-xs font-bold text-gray-400 uppercase">Title / Caption</label>
                     <input 
                       type="text" 
-                      value={modalData.desc}
-                      onChange={(e) => setModalData({...modalData, desc: e.target.value})}
+                      value={modalData.title}
+                      onChange={(e) => setModalData({...modalData, title: e.target.value})}
                       className="w-full mt-2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none focus:border-temple-gold transition-all" 
-                      placeholder="Enter a brief description..." 
+                      placeholder="Enter a brief title..." 
                     />
+                  </div>
+                  <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <input 
+                      type="checkbox" 
+                      id="feat_gallery"
+                      checked={modalData.isFeatured}
+                      onChange={(e) => setModalData({...modalData, isFeatured: e.target.checked})}
+                      className="w-5 h-5 rounded border-gray-300 text-temple-red focus:ring-temple-red"
+                    />
+                    <label htmlFor="feat_gallery" className="text-sm font-bold text-gray-700 cursor-pointer">Show on Home Page</label>
                   </div>
                 </div>
               ) : modalType === 'seva' ? (
@@ -666,6 +1030,16 @@ const AdminDashboard = () => {
                       placeholder="Describe the ritual details..."
                     ></textarea>
                   </div>
+                  <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <input 
+                      type="checkbox" 
+                      id="feat_seva"
+                      checked={modalData.isFeatured}
+                      onChange={(e) => setModalData({...modalData, isFeatured: e.target.checked})}
+                      className="w-5 h-5 rounded border-gray-300 text-temple-red focus:ring-temple-red"
+                    />
+                    <label htmlFor="feat_seva" className="text-sm font-bold text-gray-700 cursor-pointer">Feature on Home Page</label>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -683,21 +1057,89 @@ const AdminDashboard = () => {
                     <div>
                       <label className="text-xs font-bold text-gray-400 uppercase">Date</label>
                       <input 
-                        type="date" 
+                        type="text" 
                         value={modalData.date}
                         onChange={(e) => setModalData({...modalData, date: e.target.value})}
                         className="w-full mt-2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none focus:border-temple-gold transition-all" 
+                        placeholder="e.g. Oct 15, 2026"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-gray-400 uppercase">Time / Duration</label>
+                      <input 
+                        type="text" 
+                        value={modalData.time}
+                        onChange={(e) => setModalData({...modalData, time: e.target.value})}
+                        className="w-full mt-2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none focus:border-temple-gold transition-all" 
+                        placeholder="e.g. Full Day or 6 PM" 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-400 uppercase">Expected Crowd</label>
+                      <input 
+                        type="text" 
+                        value={modalData.attendees}
+                        onChange={(e) => setModalData({...modalData, attendees: e.target.value})}
+                        className="w-full mt-2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none focus:border-temple-gold transition-all" 
+                        placeholder="e.g. 10,000+" 
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-gray-400 uppercase">Upload Cover Image</label>
+                      <div className="mt-2 relative">
+                        <input 
+                          type="file" 
+                          onChange={handleFileUpload}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                        />
+                        <div className={`w-full p-3 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 transition-all ${isUploading ? 'border-temple-gold bg-temple-gold/5 animate-pulse' : 'border-gray-200 hover:border-temple-gold'}`}>
+                          {isUploading ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-temple-gold border-t-transparent rounded-full animate-spin"></div>
+                              <span className="text-xs font-bold text-temple-gold">Uploading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <ImageIcon size={16} className="text-gray-400" />
+                              <span className="text-xs font-bold text-gray-500">Choose Image</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-400 uppercase">Or Image URL</label>
+                      <input 
+                        type="text" 
+                        value={modalData.src}
+                        onChange={(e) => setModalData({...modalData, src: e.target.value})}
+                        className="w-full mt-2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none focus:border-temple-gold transition-all" 
+                        placeholder="https://example.com/image.jpg" 
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase">Additional Notes</label>
+                    <label className="text-xs font-bold text-gray-400 uppercase">Description</label>
                     <textarea 
                       value={modalData.desc}
                       onChange={(e) => setModalData({...modalData, desc: e.target.value})}
                       className="w-full mt-2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none focus:border-temple-gold transition-all h-24" 
                       placeholder="Enter details..."
                     ></textarea>
+                  </div>
+                  <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <input 
+                      type="checkbox" 
+                      id="feat_event"
+                      checked={modalData.isFeatured}
+                      onChange={(e) => setModalData({...modalData, isFeatured: e.target.checked})}
+                      className="w-5 h-5 rounded border-gray-300 text-temple-red focus:ring-temple-red"
+                    />
+                    <label htmlFor="feat_event" className="text-sm font-bold text-gray-700 cursor-pointer">Feature on Home Page</label>
                   </div>
                 </div>
               )}
@@ -706,9 +1148,10 @@ const AdminDashboard = () => {
                 <button onClick={() => setIsModalOpen(false)} className="flex-1 px-6 py-4 rounded-xl font-bold text-gray-500 hover:bg-gray-50 transition-all">Cancel</button>
                 <button 
                   onClick={handleAddEntry}
-                  className="flex-1 bg-temple-red text-white px-6 py-4 rounded-xl font-bold hover:bg-temple-saffron shadow-lg shadow-temple-red/20 transition-all active:scale-95"
+                  disabled={isUploading}
+                  className={`flex-1 bg-temple-red text-white px-6 py-4 rounded-xl font-bold transition-all shadow-lg shadow-temple-red/20 active:scale-95 ${isUploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-temple-saffron'}`}
                 >
-                  Create Entry
+                  {isUploading ? 'Uploading...' : (isEditMode ? 'Update Entry' : 'Create Entry')}
                 </button>
               </div>
             </div>

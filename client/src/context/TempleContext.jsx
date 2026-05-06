@@ -2,43 +2,61 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const TempleContext = createContext();
 
+const API_BASE = `http://${window.location.hostname}:5001/api`;
+
 export const TempleProvider = ({ children }) => {
   const [templeData, setTempleData] = useState({
     name: "The Sri Devikarumari Amman Dharma Sanstha",
     email: "info@devikarumari.org",
     phone: "+91 44 2680 0430",
     address: "123, Amman Koil Street, Thiruverkadu, Chennai - 600077",
-    officeHours: "Monday - Sunday: 9:00 AM - 6:00 PM",
-    specialDays: "6:00 AM - 10:00 PM",
     timings: {
       morning: { open: "06:00 AM", close: "12:30 PM" },
       evening: { open: "04:00 PM", close: "09:00 PM" }
     },
-    sevas: [
-      { id: 1, name: 'Nitya Pooja', desc: 'Daily ritual performed for the well-being of all devotees.', price: '₹101', icon: 'ॐ' },
-      { id: 2, name: 'Abishekam', desc: 'Sacred bathing ritual with milk, honey, and herbal powders.', price: '₹501', icon: '🪔' },
-      { id: 3, name: 'Anna Prasadam', desc: 'Sponsoring the daily sacred meal for 50+ devotees.', price: '₹2500', icon: '🍲' },
-      { id: 4, name: 'Kalyana Utsavam', desc: 'Grand ceremonial wedding ritual for the Divine Couple.', price: '₹5000', icon: '🌸' },
-    ]
+    sevas: [],
+    gallery: []
   });
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(localStorage.getItem('token'));
 
-  const API_URL = 'http://localhost:5000/api/settings';
+  const SETTINGS_API = `${API_BASE}/settings`;
+  const AUTH_API = `${API_BASE}/auth`;
 
-  // Load from Backend on mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (token) {
+        try {
+          const response = await fetch(`${AUTH_API}/user`, {
+            headers: { 'x-auth-token': token }
+          });
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+          } else {
+            localStorage.removeItem('token');
+            setToken(null);
+          }
+        } catch (err) {
+          console.error('Auth error:', err);
+        }
+      }
+      // Settings fetch is independent
+    };
+    fetchUser();
+  }, [token]);
+
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch(API_URL);
+        const response = await fetch(SETTINGS_API);
         if (response.ok) {
           const data = await response.json();
           setTempleData(data);
         }
       } catch (err) {
-        console.error("Failed to fetch settings from backend", err);
-        // Fallback to localStorage if backend fails
-        const savedData = localStorage.getItem('templeData');
-        if (savedData) setTempleData(JSON.parse(savedData));
+        console.error("Failed to fetch settings", err);
       } finally {
         setLoading(false);
       }
@@ -46,35 +64,106 @@ export const TempleProvider = ({ children }) => {
     fetchSettings();
   }, []);
 
+  const login = async (email, password) => {
+    try {
+      const response = await fetch(`${AUTH_API}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        setToken(data.token);
+        setUser(data.user);
+        return { success: true };
+      }
+      return { success: false, message: data.message };
+    } catch (err) {
+      return { success: false, message: 'Connection Error' };
+    }
+  };
+
+  const register = async (name, email, password) => {
+    try {
+      const response = await fetch(`${AUTH_API}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        setToken(data.token);
+        setUser(data.user);
+        return { success: true };
+      }
+      return { success: false, message: data.message };
+    } catch (err) {
+      return { success: false, message: 'Connection Error' };
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+  };
+
   const updateTempleData = async (newData) => {
     try {
-      console.log("Attempting to update settings in backend with:", newData);
       setTempleData(prev => ({ ...prev, ...newData }));
-      
-      const response = await fetch(API_URL, {
+      await fetch(SETTINGS_API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newData)
       });
-      
-      if (response.ok) {
-        const updated = await response.json();
-        console.log("Successfully updated backend:", updated);
-        setTempleData(updated);
-        localStorage.setItem('templeData', JSON.stringify(updated));
-      } else {
-        const errorText = await response.text();
-        console.error("Backend returned error:", errorText);
-      }
     } catch (err) {
-      console.error("Network or Fetch Error:", err);
-      // Still save to localStorage as backup
-      localStorage.setItem('templeData', JSON.stringify({ ...templeData, ...newData }));
+      console.error("Update error:", err);
+    }
+  };
+
+  const bookSeva = async (bookingData) => {
+    if (!token) return { success: false, message: 'Please login to book' };
+    try {
+      const response = await fetch(`${API_BASE}/bookings`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-auth-token': token
+        },
+        body: JSON.stringify(bookingData)
+      });
+      if (response.ok) return { success: true };
+      return { success: false, message: 'Booking failed' };
+    } catch (err) {
+      return { success: false, message: 'Connection Error' };
+    }
+  };
+
+  const submitDonation = async (donationData) => {
+    if (!token) return { success: false, message: 'Please login to donate' };
+    try {
+      const response = await fetch(`${API_BASE}/donations`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-auth-token': token
+        },
+        body: JSON.stringify(donationData)
+      });
+      if (response.ok) return { success: true };
+      return { success: false, message: 'Donation submission failed' };
+    } catch (err) {
+      return { success: false, message: 'Connection Error' };
     }
   };
 
   return (
-    <TempleContext.Provider value={{ templeData, updateTempleData, loading }}>
+    <TempleContext.Provider value={{ 
+      templeData, updateTempleData, loading, 
+      user, login, register, logout, bookSeva, submitDonation, token 
+    }}>
       {children}
     </TempleContext.Provider>
   );

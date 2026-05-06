@@ -6,7 +6,7 @@ import { useTemple } from '../context/TempleContext';
 
 const Home = () => {
   const { t } = useTranslation();
-  const { templeData } = useTemple();
+  const { templeData, loading } = useTemple();
   const [currentImage, setCurrentImage] = useState(0);
 
   const heroImages = [
@@ -21,7 +21,18 @@ const Home = () => {
       setCurrentImage((prev) => (prev + 1) % heroImages.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [heroImages.length]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-temple-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 border-4 border-temple-red border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-temple-red font-serif font-bold animate-pulse">Loading Divine Grace...</p>
+        </div>
+      </div>
+    );
+  }
 
   const nextImage = () => setCurrentImage((prev) => (prev + 1) % heroImages.length);
   const prevImage = () => setCurrentImage((prev) => (prev - 1 + heroImages.length) % heroImages.length);
@@ -137,14 +148,9 @@ const Home = () => {
             <p className="text-gray-500 max-w-2xl mx-auto">Participate in our ancient rituals and seek the blessings of the Divine Mother through various dedicated sevas.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { name: 'Nitya Pooja', desc: 'Daily ritual performed for the well-being of all devotees.', price: '₹101' },
-              { name: 'Abishekam', desc: 'Sacred bathing ritual with milk, honey, and herbal powders.', price: '₹501' },
-              { name: 'Anna Prasadam', desc: 'Sponsoring the daily sacred meal for 50+ devotees.', price: '₹2500' },
-              { name: 'Kalyana Utsavam', desc: 'Grand ceremonial wedding ritual for the Divine Couple.', price: '₹5000' },
-            ].map((seva, i) => (
+            {templeData.sevas?.filter(s => s.isFeatured).map((seva, i) => (
               <div key={i} className="group p-8 rounded-3xl bg-temple-white border border-gray-100 hover:border-temple-gold transition-all duration-500 hover:shadow-2xl">
-                <div className="w-12 h-12 bg-temple-red text-white rounded-xl flex items-center justify-center mb-6 font-bold shadow-lg group-hover:scale-110 transition-transform">ॐ</div>
+                <div className="w-12 h-12 bg-temple-red text-white rounded-xl flex items-center justify-center mb-6 font-bold shadow-lg group-hover:scale-110 transition-transform">{seva.icon || 'ॐ'}</div>
                 <h4 className="text-xl font-bold text-gray-800 mb-3">{seva.name}</h4>
                 <p className="text-gray-500 text-sm mb-6 leading-relaxed">{seva.desc}</p>
                 <div className="flex justify-between items-center">
@@ -167,23 +173,37 @@ const Home = () => {
               <h2 className="text-4xl font-serif text-temple-red mb-2">Temple Splendor</h2>
               <p className="text-gray-500">A glimpse into the architectural and spiritual majesty of our abode.</p>
             </div>
-            <button className="bg-white border border-gray-200 px-8 py-3 rounded-full font-bold hover:bg-temple-red hover:text-white transition-all shadow-md">
+            <button 
+              onClick={() => window.location.href='/gallery'}
+              className="bg-white border border-gray-200 px-8 py-3 rounded-full font-bold hover:bg-temple-red hover:text-white transition-all shadow-md"
+            >
               Explore Full Gallery
             </button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 h-[500px]">
-            <div className="col-span-2 row-span-2 rounded-3xl overflow-hidden shadow-xl border-4 border-white">
-              <img src="/hero-temple.png" className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
-            </div>
-            <div className="rounded-3xl overflow-hidden shadow-xl border-4 border-white">
-              <img src="/hero-night.png" className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
-            </div>
-            <div className="rounded-3xl overflow-hidden shadow-xl border-4 border-white">
-              <img src="/hero-pond.png" className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
-            </div>
-            <div className="col-span-2 rounded-3xl overflow-hidden shadow-xl border-4 border-white">
-              <img src="/hero-festival.png" className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
-            </div>
+            {templeData.gallery && templeData.gallery.filter(item => item.isFeatured).length > 0 ? (
+              (() => {
+                const featured = templeData.gallery.filter(item => item.isFeatured);
+                return (
+                  <>
+                    <div className="col-span-2 row-span-2 rounded-3xl overflow-hidden shadow-xl border-4 border-white">
+                      <img src={featured[0]?.url} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
+                    </div>
+                    <div className="rounded-3xl overflow-hidden shadow-xl border-4 border-white">
+                      <img src={featured[1]?.url || featured[0]?.url} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
+                    </div>
+                    <div className="rounded-3xl overflow-hidden shadow-xl border-4 border-white">
+                      <img src={featured[2]?.url || featured[0]?.url} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
+                    </div>
+                    <div className="col-span-2 rounded-3xl overflow-hidden shadow-xl border-4 border-white">
+                      <img src={featured[3]?.url || featured[0]?.url} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
+                    </div>
+                  </>
+                );
+              })()
+            ) : (
+              <div className="col-span-4 flex items-center justify-center text-gray-400">No featured gallery images.</div>
+            )}
           </div>
         </div>
       </section>
@@ -273,12 +293,12 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Festival Calendar Section */}
+      {/* Event & Festival Calendar Section */}
       <section className="py-24 bg-temple-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-center mb-16">
             <div>
-              <h2 className="text-4xl font-serif text-temple-red">Festival Calendar</h2>
+              <h2 className="text-4xl font-serif text-temple-red">Events</h2>
               <p className="text-gray-500 mt-2">Upcoming auspicious celebrations and sacred dates.</p>
             </div>
             <div className="flex gap-2">
@@ -287,24 +307,30 @@ const Home = () => {
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { month: 'May', date: '10', event: 'Akshaya Tritiya', desc: 'A day of eternal prosperity. Special Lakshmi Pooja at sunrise.' },
-              { month: 'Jun', date: '21', event: 'Vaikasi Visakam', desc: 'Celebration of Lord Murugan\'s birth with grand abhishekam.' },
-              { month: 'Jul', date: '15', event: 'Aadi Perukku', desc: 'Festival of life-giving water and gratitude to Mother Nature.' },
-            ].map((item, i) => (
-              <div key={i} className="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all border-b-4 border-temple-gold group">
-                <div className="flex items-center gap-6 mb-6">
-                  <div className="text-center">
-                    <div className="text-xs uppercase font-bold text-gray-400">{item.month}</div>
-                    <div className="text-3xl font-serif font-bold text-temple-red">{item.date}</div>
+            {(templeData.events && templeData.events.length > 0 ? templeData.events.filter(ev => ev.isFeatured) : [
+              { month: 'May', date: '10', title: 'Akshaya Tritiya', desc: 'A day of eternal prosperity. Special Lakshmi Pooja at sunrise.', isFeatured: true },
+              { month: 'Jun', date: '21', title: 'Vaikasi Visakam', desc: 'Celebration of Lord Murugan\'s birth with grand abhishekam.', isFeatured: true },
+              { month: 'Jul', date: '15', title: 'Aadi Perukku', desc: 'Festival of life-giving water and gratitude to Mother Nature.', isFeatured: true },
+            ]).slice(0, 3).map((item, i) => {
+              const dateParts = item.date?.split(' ') || [];
+              const month = dateParts[0] || item.month || '...';
+              const day = dateParts[1]?.replace(',', '') || item.date || '...';
+              
+              return (
+                <div key={i} className="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all border-b-4 border-temple-gold group">
+                  <div className="flex items-center gap-6 mb-6">
+                    <div className="text-center">
+                      <div className="text-xs uppercase font-bold text-gray-400">{month}</div>
+                      <div className="text-3xl font-serif font-bold text-temple-red">{day}</div>
+                    </div>
+                    <div className="h-10 w-[1px] bg-gray-100"></div>
+                    <h4 className="text-xl font-bold text-gray-800 group-hover:text-temple-red transition-colors">{item.title || item.event}</h4>
                   </div>
-                  <div className="h-10 w-[1px] bg-gray-100"></div>
-                  <h4 className="text-xl font-bold text-gray-800 group-hover:text-temple-red transition-colors">{item.event}</h4>
+                  <p className="text-gray-500 text-sm leading-relaxed mb-6">{item.desc}</p>
+                  <button className="text-xs font-bold text-temple-gold flex items-center gap-2">REMIND ME <ArrowRight size={14} /></button>
                 </div>
-                <p className="text-gray-500 text-sm leading-relaxed mb-6">{item.desc}</p>
-                <button className="text-xs font-bold text-temple-gold flex items-center gap-2">REMIND ME <ArrowRight size={14} /></button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

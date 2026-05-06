@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTemple } from '../context/TempleContext';
 
 const Gallery = () => {
+  const { templeData } = useTemple();
   const [filter, setFilter] = useState('all');
 
-  const mediaItems = [
-    { type: 'photo', src: "/hero-temple.png", title: "Main Gopuram - Architectural Marvel" },
-    { type: 'video', src: "/hero-night.png", title: "Golden Glow - Temple at Night" },
-    { type: 'photo', src: "/hero-pond.png", title: "Pushkarini - Sacred Temple Pond" },
-    { type: 'video', src: "/hero-festival.png", title: "Ther Thiruvizha - Chariot Festival" },
-    { type: 'photo', src: "/hero-temple.png", title: "Morning Deepa Aradhana" },
-  ];
+  const mediaItems = templeData.gallery || [];
 
-  const filteredItems = filter === 'all' ? mediaItems : mediaItems.filter(item => item.type === filter);
+  const filteredItems = filter === 'all' 
+    ? mediaItems 
+    : mediaItems.filter(item => item.type === filter); // Support type filter if added later
 
   return (
     <div className="bg-temple-white min-h-screen pb-20">
@@ -46,7 +44,7 @@ const Gallery = () => {
             >
               <div className="aspect-[4/3] overflow-hidden relative">
                 <img 
-                  src={item.src} 
+                  src={item.url} 
                   alt={item.title} 
                   className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                 />

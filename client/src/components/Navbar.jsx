@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Menu, X, Globe } from 'lucide-react';
+import { Menu, X, Globe, User, LogOut } from 'lucide-react';
+import { useTemple } from '../context/TempleContext';
 
 const Navbar = () => {
   const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const { user, logout } = useTemple();
 
   const toggleLanguage = () => {
     const newLang = i18n.language === 'en' ? 'ta' : 'en';
@@ -54,17 +56,49 @@ const Navbar = () => {
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-temple-gold transition-all group-hover:w-full"></span>
                 </Link>
               ))}
-              <button
-                onClick={toggleLanguage}
-                className="ml-4 flex items-center gap-1 bg-temple-gold text-temple-red px-4 py-1.5 rounded-full text-sm font-bold hover:bg-white transition-all shadow-md active:scale-95"
-              >
-                <Globe size={16} />
-                {i18n.language === 'en' ? 'தமிழ்' : 'English'}
-              </button>
+              
+              <div className="flex items-center gap-4 pl-4 border-l border-white/20">
+                {user ? (
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-end">
+                      <span className="text-xs font-bold text-temple-gold uppercase tracking-tighter">Namaste</span>
+                      <span className="text-sm font-medium">{user.name.split(' ')[0]}</span>
+                    </div>
+                    <button 
+                      onClick={logout}
+                      className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                      title="Logout"
+                    >
+                      <LogOut size={18} className="text-temple-gold" />
+                    </button>
+                  </div>
+                ) : (
+                  <Link 
+                    to="/login" 
+                    className="flex items-center gap-2 bg-white text-temple-red px-6 py-2 rounded-full text-sm font-bold hover:bg-temple-gold transition-all shadow-md active:scale-95"
+                  >
+                    <User size={16} />
+                    {t('nav.login') || 'Login'}
+                  </Link>
+                )}
+
+                <button
+                  onClick={toggleLanguage}
+                  className="flex items-center gap-1 bg-temple-gold text-temple-red px-4 py-1.5 rounded-full text-sm font-bold hover:bg-white transition-all shadow-md active:scale-95"
+                >
+                  <Globe size={16} />
+                  {i18n.language === 'en' ? 'தமிழ்' : 'English'}
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="lg:hidden flex items-center gap-4">
+          <div className="lg:hidden flex items-center gap-3">
+            {!user && (
+              <Link to="/login" className="bg-white text-temple-red p-2 rounded-full shadow-sm">
+                <User size={18} />
+              </Link>
+            )}
             <button
               onClick={toggleLanguage}
               className="flex items-center gap-1 bg-temple-gold text-temple-red px-3 py-1 rounded-full text-xs font-bold shadow-sm"
@@ -84,18 +118,36 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {isOpen && (
-        <div className="lg:hidden gradient-red border-t border-temple-gold/20 shadow-xl">
+        <div className="lg:hidden gradient-red border-t border-temple-gold/20 shadow-xl animate-in slide-in-from-top duration-300">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            {user && (
+              <div className="px-3 py-4 border-b border-white/10 mb-2 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-temple-gold uppercase font-bold tracking-widest">Namaste</p>
+                  <p className="text-lg font-serif font-bold">{user.name}</p>
+                </div>
+                <button onClick={logout} className="p-2 bg-white/10 rounded-full"><LogOut size={20} /></button>
+              </div>
+            )}
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
-                className="block px-3 py-2 rounded-md text-base font-medium hover:bg-white/10 hover:text-temple-gold transition-colors"
+                className="block px-3 py-3 rounded-xl text-base font-medium hover:bg-white/10 hover:text-temple-gold transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 {link.name}
               </Link>
             ))}
+            {!user && (
+              <Link
+                to="/login"
+                className="block px-3 py-3 rounded-xl text-base font-bold text-temple-gold border border-temple-gold/30 mt-4 text-center"
+                onClick={() => setIsOpen(false)}
+              >
+                Login / Register
+              </Link>
+            )}
           </div>
         </div>
       )}

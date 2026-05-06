@@ -1,14 +1,67 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { CheckCircle2, AlertCircle, X } from 'lucide-react';
 
 import { useTemple } from '../context/TempleContext';
 
 const Pooja = () => {
-  const { templeData } = useTemple();
+  const { templeData, user, bookSeva, loading } = useTemple();
   const poojas = templeData.sevas || [];
+  const navigate = useNavigate();
+  const [status, setStatus] = useState({ type: '', msg: '' });
+
+  const handleBook = async (seva) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const result = await bookSeva({
+      sevaId: seva.id,
+      date: new Date(),
+      time: 'TBD',
+      amount: seva.price
+    });
+
+    if (result.success) {
+      setStatus({ type: 'success', msg: `Successfully booked ${seva.name}!` });
+    } else {
+      setStatus({ type: 'error', msg: result.message });
+    }
+    
+    setTimeout(() => setStatus({ type: '', msg: '' }), 5000);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-temple-white flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-temple-red border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div>
+      <AnimatePresence>
+        {status.msg && (
+          <motion.div 
+            initial={{ opacity: 0, y: -100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -100 }}
+            className={`fixed top-24 left-1/2 -translate-x-1/2 z-[100] w-full max-w-md px-4`}
+          >
+            <div className={`${status.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between`}>
+              <div className="flex items-center gap-3">
+                {status.type === 'success' ? <CheckCircle2 /> : <AlertCircle />}
+                <p className="font-bold text-sm">{status.msg}</p>
+              </div>
+              <button onClick={() => setStatus({ type: '', msg: '' })}><X size={18} /></button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <section className="gradient-saffron text-white py-20 px-4 text-center">
         <h1 className="text-5xl font-serif mb-6">Pooja & Seva Services</h1>
         <p className="max-w-2xl mx-auto text-lg opacity-90">Participate in our sacred rituals and receive the blessings of Sri Devikarumari Amman.</p>
@@ -49,7 +102,10 @@ const Pooja = () => {
                       {p.price.includes('₹') ? p.price : `₹${p.price}`}
                     </span>
                   </div>
-                  <button className="bg-temple-red text-white h-12 px-6 rounded-xl font-bold hover:bg-temple-saffron transition-all shadow-lg active:scale-95">
+                  <button 
+                    onClick={() => handleBook(p)}
+                    className="bg-temple-red text-white h-12 px-6 rounded-xl font-bold hover:bg-temple-saffron transition-all shadow-lg active:scale-95"
+                  >
                     Book Now
                   </button>
                 </div>

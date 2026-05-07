@@ -2,14 +2,14 @@
   "name": "the-sri-devikarumari-amman-dharma-sanstha",
   "version": "1.0.0",
   "description": "Integrated Temple Management System",
-  "main": "index.js",
+  "main": "backend/index.js",
   "scripts": {
-    "start": "node index.js",
-    "server": "nodemon index.js",
-    "client": "vite",
-    "build": "vite build",
+    "start": "node backend/index.js",
+    "server": "nodemon backend/index.js",
+    "client": "vite frontend",
+    "build": "vite build frontend",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "lint": "eslint ."
+    "lint": "eslint frontend"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

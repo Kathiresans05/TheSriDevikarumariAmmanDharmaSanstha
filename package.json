@@ -7,7 +7,7 @@
     "start": "node backend/index.js",
     "server": "nodemon backend/index.js",
     "client": "vite frontend",
-    "build": "vite build frontend",
+    "build": "vite build frontend --outDir ../dist --emptyOutDir",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "lint": "eslint frontend"
   },

@@ -12,7 +12,8 @@ const resources = {
         "gallery": "Gallery",
         "events": "Events",
         "donations": "Donations",
-        "contact": "Contact"
+        "contact": "Contact",
+        "book_pooja": "Book Pooja"
       },
       "hero": {
         "title": "The Sri Devikarumari Amman Dharma Sanstha",
@@ -30,7 +31,8 @@ const resources = {
         "gallery": "புகைப்படங்கள்",
         "events": "நிகழ்வுகள்",
         "donations": "நன்கொடைகள்",
-        "contact": "தொடர்பு"
+        "contact": "தொடர்பு",
+        "book_pooja": "பூஜை முன்பதிவு"
       },
       "hero": {
         "title": "ஸ்ரீ தேவிகருமாரி அம்மன் தர்ம சன்ஸ்தா",

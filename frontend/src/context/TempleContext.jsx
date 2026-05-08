@@ -71,16 +71,20 @@ export const TempleProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      const data = await response.json();
+      
+      const isJson = response.headers.get('content-type')?.includes('application/json');
+      const data = isJson ? await response.json() : null;
+
       if (response.ok) {
         localStorage.setItem('token', data.token);
         setToken(data.token);
         setUser(data.user);
         return { success: true };
       }
-      return { success: false, message: data.message };
+      return { success: false, message: data?.message || `Error: ${response.status} ${response.statusText}` };
     } catch (err) {
-      return { success: false, message: 'Connection Error' };
+      console.error('Login Error:', err);
+      return { success: false, message: 'Connection Error: Please check if the server is running' };
     }
   };
 
@@ -91,16 +95,20 @@ export const TempleProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password })
       });
-      const data = await response.json();
+      
+      const isJson = response.headers.get('content-type')?.includes('application/json');
+      const data = isJson ? await response.json() : null;
+
       if (response.ok) {
         localStorage.setItem('token', data.token);
         setToken(data.token);
         setUser(data.user);
         return { success: true };
       }
-      return { success: false, message: data.message };
+      return { success: false, message: data?.message || `Error: ${response.status} ${response.statusText}` };
     } catch (err) {
-      return { success: false, message: 'Connection Error' };
+      console.error('Register Error:', err);
+      return { success: false, message: 'Connection Error: Please check if the server is running' };
     }
   };
 
@@ -135,9 +143,13 @@ export const TempleProvider = ({ children }) => {
         body: JSON.stringify(bookingData)
       });
       if (response.ok) return { success: true };
-      return { success: false, message: 'Booking failed' };
+      
+      const isJson = response.headers.get('content-type')?.includes('application/json');
+      const data = isJson ? await response.json() : null;
+      return { success: false, message: data?.message || 'Booking failed' };
     } catch (err) {
-      return { success: false, message: 'Connection Error' };
+      console.error('Booking Error:', err);
+      return { success: false, message: 'Connection Error: Please check if the server is running' };
     }
   };
 
@@ -153,9 +165,13 @@ export const TempleProvider = ({ children }) => {
         body: JSON.stringify(donationData)
       });
       if (response.ok) return { success: true };
-      return { success: false, message: 'Donation submission failed' };
+      
+      const isJson = response.headers.get('content-type')?.includes('application/json');
+      const data = isJson ? await response.json() : null;
+      return { success: false, message: data?.message || 'Donation submission failed' };
     } catch (err) {
-      return { success: false, message: 'Connection Error' };
+      console.error('Donation Error:', err);
+      return { success: false, message: 'Connection Error: Please check if the server is running' };
     }
   };
 

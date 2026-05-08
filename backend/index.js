@@ -146,7 +146,7 @@ app.post('/api/auth/register', async (req, res) => {
     res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server Error');
+    res.status(500).json({ message: 'Server Error' });
   }
 });
 
@@ -162,7 +162,7 @@ app.post('/api/auth/login', async (req, res) => {
     const token = jwt.sign({ id: user._id }, 'temple_secret_key', { expiresIn: '7d' });
     res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
   } catch (err) {
-    res.status(500).send('Server Error');
+    res.status(500).json({ message: 'Server Error' });
   }
 });
 
@@ -171,7 +171,7 @@ app.get('/api/auth/user', auth, async (req, res) => {
     const user = await User.findById(req.user.id).select('-password');
     res.json(user);
   } catch (err) {
-    res.status(500).send('Server Error');
+    res.status(500).json({ message: 'Server Error' });
   }
 });
 
@@ -199,7 +199,7 @@ app.post('/api/bookings', auth, async (req, res) => {
     res.json(user.bookings);
   } catch (err) {
     console.error('Booking Error:', err);
-    res.status(500).send('Server Error');
+    res.status(500).json({ message: 'Server Error' });
   }
 });
 
@@ -212,7 +212,7 @@ app.post('/api/donations', auth, async (req, res) => {
     await user.save();
     res.json(user.donations);
   } catch (err) {
-    res.status(500).send('Server Error');
+    res.status(500).json({ message: 'Server Error' });
   }
 });
 

@@ -77,9 +77,12 @@ export const TempleProvider = ({ children }) => {
 
       if (response.ok) {
         localStorage.setItem('token', data.token);
+        if (data.user?.isAdmin) {
+          localStorage.setItem('isAdminAuthenticated', 'true');
+        }
         setToken(data.token);
         setUser(data.user);
-        return { success: true };
+        return { success: true, user: data.user };
       }
       return { success: false, message: data?.message || `Error: ${response.status} ${response.statusText}` };
     } catch (err) {
@@ -101,9 +104,12 @@ export const TempleProvider = ({ children }) => {
 
       if (response.ok) {
         localStorage.setItem('token', data.token);
+        if (data.user?.isAdmin) {
+          localStorage.setItem('isAdminAuthenticated', 'true');
+        }
         setToken(data.token);
         setUser(data.user);
-        return { success: true };
+        return { success: true, user: data.user };
       }
       return { success: false, message: data?.message || `Error: ${response.status} ${response.statusText}` };
     } catch (err) {
@@ -114,6 +120,7 @@ export const TempleProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('isAdminAuthenticated');
     setToken(null);
     setUser(null);
   };

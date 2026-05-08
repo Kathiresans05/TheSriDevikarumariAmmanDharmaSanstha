@@ -78,6 +78,17 @@ const Navbar = () => {
                         isActive('/dashboard') ? 'text-temple-gold' : 'text-white group-hover/user:text-temple-gold'
                       }`}>{user.name.split(' ')[0]}</span>
                     </Link>
+
+                    {user.isAdmin && (
+                      <Link 
+                        to="/admin" 
+                        className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                          isActive('/admin') ? 'bg-white text-temple-red border-white' : 'bg-white/10 text-white border-white/20 hover:bg-white hover:text-temple-red'
+                        }`}
+                      >
+                        Admin Dashboard
+                      </Link>
+                    )}
                   </div>
                 ) : (
                   <Link 
@@ -129,19 +140,33 @@ const Navbar = () => {
             <div className="px-4 pt-2 pb-8 space-y-2">
               {user && (
                 <div className="space-y-2 mb-4">
-                  <Link 
-                    to="/dashboard"
-                    onClick={() => setIsOpen(false)}
-                    className={`px-4 py-6 border-b border-white/10 flex items-center justify-between rounded-2xl group transition-all ${
-                      isActive('/dashboard') ? 'bg-white/10' : 'bg-white/5 hover:bg-white/10'
-                    }`}
-                  >
-                    <div>
-                      <p className={`text-[10px] uppercase font-bold tracking-[0.2em] mb-1 ${isActive('/dashboard') ? 'text-white' : 'text-temple-gold'}`}>My Dashboard</p>
-                      <p className="text-xl font-serif font-bold text-white">{user.name}</p>
-                    </div>
-                    <ArrowRight size={20} className={isActive('/dashboard') ? 'text-white' : 'text-temple-gold'} />
-                  </Link>
+                    <Link 
+                      to="/dashboard"
+                      onClick={() => setIsOpen(false)}
+                      className={`px-4 py-6 border-b border-white/10 flex items-center justify-between rounded-2xl group transition-all ${
+                        isActive('/dashboard') ? 'bg-white/10' : 'bg-white/5 hover:bg-white/10'
+                      }`}
+                    >
+                      <div>
+                        <p className={`text-[10px] uppercase font-bold tracking-[0.2em] mb-1 ${isActive('/dashboard') ? 'text-white' : 'text-temple-gold'}`}>My Dashboard</p>
+                        <p className="text-xl font-serif font-bold text-white">{user.name}</p>
+                      </div>
+                      <ArrowRight size={20} className={isActive('/dashboard') ? 'text-white' : 'text-temple-gold'} />
+                    </Link>
+
+                    {user.isAdmin && (
+                      <Link 
+                        to="/admin"
+                        onClick={() => setIsOpen(false)}
+                        className={`px-4 py-5 border-b border-white/10 flex items-center justify-between rounded-2xl bg-white/10 mt-2`}
+                      >
+                        <div>
+                          <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-temple-gold mb-1">Management</p>
+                          <p className="text-lg font-serif font-bold text-white">Admin Dashboard</p>
+                        </div>
+                        <ArrowRight size={20} className="text-temple-gold" />
+                      </Link>
+                    )}
                   <button 
                     onClick={logout} 
                     className="w-full p-4 flex items-center justify-center gap-2 bg-white/5 text-red-400 rounded-2xl active:scale-95 transition-transform font-bold text-sm"

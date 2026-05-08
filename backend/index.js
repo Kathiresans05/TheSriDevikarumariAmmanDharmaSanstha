@@ -119,6 +119,21 @@ const TempleSettings = require('./models/TempleSettings');
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, password } = req.body;
   try {
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please enter all fields' });
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
+
+    // Password strength
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ message: 'User already exists' });
 
@@ -130,6 +145,7 @@ app.post('/api/auth/register', async (req, res) => {
     const token = jwt.sign({ id: user._id }, 'temple_secret_key', { expiresIn: '7d' });
     res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
   } catch (err) {
+    console.error(err);
     res.status(500).send('Server Error');
   }
 });

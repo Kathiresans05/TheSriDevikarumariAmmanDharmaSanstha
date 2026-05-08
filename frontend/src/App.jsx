@@ -13,13 +13,21 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminLogin from './pages/admin/AdminLogin';
 import UserLogin from './pages/auth/UserLogin';
 import UserRegister from './pages/auth/UserRegister';
-import { TempleProvider } from './context/TempleContext';
+import UserDashboard from './pages/auth/UserDashboard';
+import { TempleProvider, useTemple } from './context/TempleContext';
 import './i18n/config';
 
-// Simple Protected Route Component
+// Simple Protected Route Component for Admins
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('isAdminAuthenticated') === 'true';
   return isAuthenticated ? children : <Navigate to="/admin/login" replace />;
+};
+
+// Protected Route for Registered Users
+const UserProtectedRoute = ({ children }) => {
+  const { user, loading } = useTemple();
+  if (loading) return <div className="h-screen flex items-center justify-center font-bold">Loading...</div>;
+  return user ? children : <Navigate to="/login" replace />;
 };
 
 const AppContent = () => {
@@ -40,6 +48,14 @@ const AppContent = () => {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<UserLogin />} />
           <Route path="/register" element={<UserRegister />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <UserProtectedRoute>
+                <UserDashboard />
+              </UserProtectedRoute>
+            } 
+          />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route 
             path="/admin" 

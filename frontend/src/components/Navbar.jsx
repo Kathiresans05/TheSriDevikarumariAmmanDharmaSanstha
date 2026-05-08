@@ -61,10 +61,16 @@ const Navbar = () => {
               <div className="flex items-center gap-3 pl-4 border-l border-white/20">
                 {user ? (
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-temple-gold uppercase">{user.name.split(' ')[0]}</span>
+                    <Link to="/dashboard" className="flex items-center gap-2 group/user">
+                      <div className="w-8 h-8 bg-temple-gold/20 rounded-full flex items-center justify-center border border-temple-gold/30 group-hover/user:bg-temple-gold transition-all">
+                        <User size={14} className="text-temple-gold group-hover/user:text-temple-red" />
+                      </div>
+                      <span className="text-sm font-bold text-white group-hover/user:text-temple-gold transition-colors uppercase tracking-tight">{user.name.split(' ')[0]}</span>
+                    </Link>
                     <button 
                       onClick={logout}
                       className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                      title="Logout"
                     >
                       <LogOut size={16} className="text-white" />
                     </button>
@@ -117,17 +123,23 @@ const Navbar = () => {
           >
             <div className="px-4 pt-2 pb-8 space-y-2">
               {user && (
-                <div className="px-4 py-6 border-b border-white/10 mb-4 flex items-center justify-between bg-white/5 rounded-2xl">
-                  <div>
-                    <p className="text-[10px] text-temple-gold uppercase font-bold tracking-[0.2em] mb-1">Namaste</p>
-                    <p className="text-xl font-serif font-bold text-white">{user.name}</p>
-                  </div>
+                <div className="space-y-2 mb-4">
+                  <Link 
+                    to="/dashboard"
+                    onClick={() => setIsOpen(false)}
+                    className="px-4 py-6 border-b border-white/10 flex items-center justify-between bg-white/5 rounded-2xl group hover:bg-white/10 transition-all"
+                  >
+                    <div>
+                      <p className="text-[10px] text-temple-gold uppercase font-bold tracking-[0.2em] mb-1">My Dashboard</p>
+                      <p className="text-xl font-serif font-bold text-white">{user.name}</p>
+                    </div>
+                    <ArrowRight size={20} className="text-temple-gold" />
+                  </Link>
                   <button 
                     onClick={logout} 
-                    className="p-3 bg-white/10 text-temple-gold rounded-xl active:scale-95 transition-transform"
-                    aria-label="Logout"
+                    className="w-full p-4 flex items-center justify-center gap-2 bg-white/5 text-red-400 rounded-2xl active:scale-95 transition-transform font-bold text-sm"
                   >
-                    <LogOut size={20} />
+                    <LogOut size={18} /> Logout
                   </button>
                 </div>
               )}

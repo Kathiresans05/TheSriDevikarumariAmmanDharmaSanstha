@@ -67,12 +67,6 @@ const Navbar = () => {
                       </div>
                       <span className="text-sm font-bold text-white group-hover/user:text-temple-gold transition-colors uppercase tracking-tight">{user.name.split(' ')[0]}</span>
                     </Link>
-                    <button 
-                      onClick={logout}
-                      className="text-xs font-bold text-white/70 hover:text-white transition-colors ml-2 border-l border-white/20 pl-3"
-                    >
-                      LOGOUT
-                    </button>
                   </div>
                 ) : (
                   <Link 

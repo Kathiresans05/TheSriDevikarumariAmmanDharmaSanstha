@@ -18,8 +18,8 @@ const About = () => {
             transition={{ duration: 0.8 }}
           >
             <img 
-              src="/interior-deity.png" 
-              alt="Sri Devikarumari Amman" 
+              src="/god17.jpg" 
+              alt="Sri Devikarumari Amman - Moolavar" 
               className="rounded-2xl shadow-2xl temple-border border-8"
             />
           </motion.div>

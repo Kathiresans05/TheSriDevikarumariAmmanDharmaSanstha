@@ -65,10 +65,10 @@ const Home = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 1.5 }}
               alt="Temple Hero"
-              className="w-full h-full object-cover brightness-50"
+              className="w-full h-full object-cover brightness-[0.7] md:brightness-[0.8]"
             />
           </AnimatePresence>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-temple-red/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-temple-red/30"></div>
         </div>
 
         {/* Slider Controls */}
@@ -79,10 +79,14 @@ const Home = () => {
           <ChevronRight size={32} />
         </button>
 
-        <div className="relative z-10 max-w-4xl px-4">
+        <div className="relative z-10 max-w-4xl px-4 drop-shadow-2xl">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}>
-            <h1 className="text-4xl md:text-7xl font-serif mb-6 leading-tight">Divine Grace of Sri Devikarumari</h1>
-            <p className="text-xl md:text-2xl font-light mb-8 italic text-temple-gold">A Sacred Sanctuary for Inner Peace and Spiritual Awakening</p>
+            <h1 className="text-4xl md:text-7xl font-serif mb-6 leading-tight drop-shadow-lg" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
+              Divine Grace of Sri Devikarumari
+            </h1>
+            <p className="text-xl md:text-2xl font-light mb-8 italic text-temple-gold drop-shadow-md" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
+              A Sacred Sanctuary for Inner Peace and Spiritual Awakening
+            </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
               <button 
                 onClick={() => navigate('/pooja')}

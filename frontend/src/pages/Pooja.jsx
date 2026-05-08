@@ -306,11 +306,6 @@ const Pooja = () => {
           )}
         </AnimatePresence>
       </section>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-      </section>
 
       <section className="gradient-red text-white py-16 px-4 mb-20 rounded-3xl max-w-7xl mx-auto overflow-hidden relative">
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-temple-gold/20 rounded-full blur-3xl"></div>

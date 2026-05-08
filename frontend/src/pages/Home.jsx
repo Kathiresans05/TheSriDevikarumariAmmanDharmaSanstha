@@ -39,6 +39,8 @@ const Home = () => {
   const nextImage = () => setCurrentImage((prev) => (prev + 1) % heroImages.length);
   const prevImage = () => setCurrentImage((prev) => (prev - 1 + heroImages.length) % heroImages.length);
 
+  const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
+
   return (
     <div className="overflow-hidden bg-temple-white">
       {/* Hero Section */}
@@ -88,7 +90,6 @@ const Home = () => {
           </motion.div>
         </div>
       </section>
-
       {/* Daily Highlights */}
       <section className="py-20 relative">
         <div className="max-w-7xl mx-auto px-4">
@@ -111,14 +112,14 @@ const Home = () => {
               </div>
             </motion.div>
 
-            {/* Upcoming Festival */}
+            {/* Upcoming Events - Dynamic Month */}
             <motion.div whileHover={{ y: -10 }} className="bg-temple-red text-white p-10 rounded-3xl shadow-2xl">
               <div className="w-16 h-16 bg-white/10 text-temple-gold rounded-2xl flex items-center justify-center mb-8">
                 <Calendar size={32} />
               </div>
-              <h3 className="text-2xl font-serif font-bold mb-4 text-temple-gold">Aadi Festival</h3>
-              <p className="opacity-90 mb-8 text-sm leading-relaxed">Join us for the most auspicious month of Aadi with special milk abishekam and the grand chariot procession.</p>
-              <button className="text-temple-gold font-bold flex items-center gap-2 hover:underline">View Calendar <ArrowRight size={16} /></button>
+              <h3 className="text-2xl font-serif font-bold mb-4 text-temple-gold">{currentMonthName} Calendar</h3>
+              <p className="opacity-90 mb-8 text-sm leading-relaxed">Join us for the auspicious celebrations and special rituals scheduled for the month of {currentMonthName}. Seek the divine blessings of Mother Amman.</p>
+              <button onClick={() => navigate('/events')} className="text-temple-gold font-bold flex items-center gap-2 hover:underline">View All Events <ArrowRight size={16} /></button>
             </motion.div>
 
             {/* Donation */}

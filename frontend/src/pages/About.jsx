@@ -20,7 +20,7 @@ const About = () => {
             <img 
               src="/god17.jpg" 
               alt="Sri Devikarumari Amman - Moolavar" 
-              className="rounded-2xl shadow-2xl temple-border border-8"
+              className="rounded-2xl shadow-2xl temple-border border-8 max-w-md mx-auto w-full object-cover aspect-[3/4]"
             />
           </motion.div>
 

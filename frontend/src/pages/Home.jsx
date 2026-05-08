@@ -55,21 +55,21 @@ const Home = () => {
     <div className="overflow-hidden bg-temple-white">
       {/* Hero Section */}
       <section className="relative h-[85vh] md:h-[90vh] flex items-center justify-center text-center text-white overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <AnimatePresence mode="wait">
+        <div className="absolute inset-0 z-0 bg-black">
+          <AnimatePresence>
             <motion.img
               key={currentImage}
               src={heroImages[currentImage]}
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 1.5 }}
+              transition={{ duration: 1.2, ease: "easeInOut" }}
               alt="Temple Hero"
-              className="w-full h-full object-cover brightness-[0.7] md:brightness-[0.8]"
+              className="absolute inset-0 w-full h-full object-cover brightness-[0.7] md:brightness-[0.8]"
               style={{ objectPosition: '50% 40%' }}
             />
           </AnimatePresence>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-temple-red/30"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-temple-red/40 z-10"></div>
         </div>
 
         {/* Slider Controls */}

@@ -241,19 +241,37 @@ app.post('/api/settings', async (req, res) => {
   try {
     let settings = await TempleSettings.findOne();
     if (settings) {
-      // Use Object.assign and mark modified for reliable array updates
-      Object.assign(settings, req.body);
-      settings.markModified('sevas');
-      settings.markModified('gallery');
-      settings.markModified('events');
+      // Explicitly update fields to ensure deep nesting and arrays are handled
+      const updateData = req.body;
+      
+      // Top level fields
+      ['name', 'email', 'phone', 'address', 'officeHours', 'specialDays'].forEach(key => {
+        if (updateData[key] !== undefined) settings[key] = updateData[key];
+      });
+
+      // Nested timings
+      if (updateData.timings) {
+        settings.timings = {
+          morning: { ...settings.timings.morning, ...updateData.timings.morning },
+          evening: { ...settings.timings.evening, ...updateData.timings.evening }
+        };
+        settings.markModified('timings');
+      }
+
+      // Arrays
+      if (updateData.sevas) { settings.sevas = updateData.sevas; settings.markModified('sevas'); }
+      if (updateData.gallery) { settings.gallery = updateData.gallery; settings.markModified('gallery'); }
+      if (updateData.events) { settings.events = updateData.events; settings.markModified('events'); }
+
       await settings.save();
     } else {
       settings = await TempleSettings.create(req.body);
     }
+    console.log('[Server] Settings updated successfully');
     res.json(settings);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Failed to save settings to database" });
+    console.error('[Server] Settings update failed:', err);
+    res.status(500).json({ message: "Failed to save settings to database", error: err.message });
   }
 });
 

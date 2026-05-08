@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const TempleContext = createContext();
 
-const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5001/api`;
+const API_BASE = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5001/api' : 'https://thesridevikarumariammandharmasanstha.onrender.com/api');
 
 export const TempleProvider = ({ children }) => {
   const [templeData, setTempleData] = useState({

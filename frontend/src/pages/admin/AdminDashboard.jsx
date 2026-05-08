@@ -18,7 +18,7 @@ import {
 
 import { useTemple } from '../../context/TempleContext';
 
-const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5001/api`;
+const API_BASE = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5001/api' : 'https://thesridevikarumariammandharmasanstha.onrender.com/api');
 
 const AdminDashboard = () => {
   const { templeData, updateTempleData } = useTemple();
@@ -101,6 +101,12 @@ const AdminDashboard = () => {
 
   // Local form state
   const [formData, setFormData] = useState(templeData);
+
+  useEffect(() => {
+    if (templeData) {
+      setFormData(templeData);
+    }
+  }, [templeData]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState('image'); // 'image', 'video', 'booking', 'event'
   const [modalData, setModalData] = useState({ name: '', title: '', price: '', desc: '', date: '', src: '', icon: 'ॐ', isFeatured: false });
@@ -268,14 +274,17 @@ const AdminDashboard = () => {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    setTimeout(() => {
-      updateTempleData(formData);
-      setIsSaving(false);
+    try {
+      await updateTempleData(formData);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
-    }, 1500);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const stats = [
@@ -896,17 +905,61 @@ const AdminDashboard = () => {
                   <div className="space-y-4">
                     <p className="text-xs font-bold text-gray-400 uppercase">Morning Session</p>
                     <div className="flex gap-4">
-                      <input type="time" defaultValue="06:00" className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm" />
+                      <input 
+                        type="text" 
+                        value={formData.timings?.morning?.open || "06:00 AM"} 
+                        onChange={(e) => setFormData({
+                          ...formData, 
+                          timings: {
+                            ...formData.timings,
+                            morning: { ...formData.timings?.morning, open: e.target.value }
+                          }
+                        })}
+                        className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm" 
+                      />
                       <span className="flex items-center">to</span>
-                      <input type="time" defaultValue="12:30" className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm" />
+                      <input 
+                        type="text" 
+                        value={formData.timings?.morning?.close || "12:30 PM"} 
+                        onChange={(e) => setFormData({
+                          ...formData, 
+                          timings: {
+                            ...formData.timings,
+                            morning: { ...formData.timings?.morning, close: e.target.value }
+                          }
+                        })}
+                        className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm" 
+                      />
                     </div>
                   </div>
                   <div className="space-y-4">
                     <p className="text-xs font-bold text-gray-400 uppercase">Evening Session</p>
                     <div className="flex gap-4">
-                      <input type="time" defaultValue="16:00" className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm" />
+                      <input 
+                        type="text" 
+                        value={formData.timings?.evening?.open || "04:00 PM"} 
+                        onChange={(e) => setFormData({
+                          ...formData, 
+                          timings: {
+                            ...formData.timings,
+                            evening: { ...formData.timings?.evening, open: e.target.value }
+                          }
+                        })}
+                        className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm" 
+                      />
                       <span className="flex items-center">to</span>
-                      <input type="time" defaultValue="21:00" className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm" />
+                      <input 
+                        type="text" 
+                        value={formData.timings?.evening?.close || "09:00 PM"} 
+                        onChange={(e) => setFormData({
+                          ...formData, 
+                          timings: {
+                            ...formData.timings,
+                            evening: { ...formData.timings?.evening, close: e.target.value }
+                          }
+                        })}
+                        className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm" 
+                      />
                     </div>
                   </div>
                 </div>

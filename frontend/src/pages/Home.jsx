@@ -306,8 +306,8 @@ const Home = () => {
             </div>
             <div className="lg:w-1/2 relative">
               <div className="grid grid-cols-2 gap-4">
-                <img src="/hero-temple.png" className="rounded-2xl shadow-lg mt-12" alt="Spiritual" />
-                <img src="/hero-night.png" className="rounded-2xl shadow-lg" alt="Spiritual" />
+                <img src="/god7.jpg" className="rounded-2xl shadow-lg mt-12" alt="Spiritual" />
+                <img src="/god9.jpg" className="rounded-2xl shadow-lg" alt="Spiritual" />
               </div>
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-white rounded-full flex items-center justify-center shadow-2xl border-4 border-temple-gold">
                 <span className="text-4xl text-temple-red font-serif">शांति</span>

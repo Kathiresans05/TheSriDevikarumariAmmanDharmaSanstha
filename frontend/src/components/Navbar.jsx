@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Globe, User, LogOut, ArrowRight, Heart } from 'lucide-react';
+import { Menu, X, Globe, User, LogOut, ArrowRight, Heart, Bell } from 'lucide-react';
 import { useTemple } from '../context/TempleContext';
 
 const Navbar = () => {
@@ -79,13 +79,13 @@ const Navbar = () => {
                   </Link>
                 )}
 
-                <button 
-                  onClick={toggleLanguage}
-                  className="flex items-center gap-2 bg-temple-gold text-temple-red px-5 py-2 rounded-full text-sm font-bold hover:bg-white transition-all shadow-md active:scale-95 whitespace-nowrap uppercase"
+                <Link 
+                  to="/pooja"
+                  className="flex items-center gap-2 bg-temple-gold text-temple-red px-6 py-2 rounded-full text-sm font-bold hover:bg-white transition-all shadow-md active:scale-95 whitespace-nowrap uppercase"
                 >
-                  <Globe size={16} />
-                  {i18n.language === 'en' ? 'English' : 'தமிழ்'}
-                </button>
+                  <Bell size={16} />
+                  {t('nav.book_pooja') || 'Book Pooja'}
+                </Link>
               </div>
             </div>
           </div>

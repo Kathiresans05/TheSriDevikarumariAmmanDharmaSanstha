@@ -79,7 +79,7 @@ const Footer = () => {
               </li>
               <li className="flex gap-3 md:gap-4">
                 <div className="w-8 h-8 md:w-10 md:h-10 bg-white/5 rounded-full flex items-center justify-center flex-shrink-0"><span className="text-temple-gold text-xs">✉️</span></div>
-                <p className="text-gray-400">{templeData.email}</p>
+                <p className="text-gray-400 break-all">{templeData.email}</p>
               </li>
             </ul>
           </div>

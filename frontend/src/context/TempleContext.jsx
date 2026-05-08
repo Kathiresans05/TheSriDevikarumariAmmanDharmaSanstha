@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const TempleContext = createContext();
 
-const API_BASE = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5001/api' : 'https://thesridevikarumariammandharmasanstha.onrender.com/api');
+const API_BASE = import.meta.env.VITE_API_URL || (['localhost', '127.0.0.1'].includes(window.location.hostname) ? 'http://localhost:5001/api' : 'https://thesridevikarumariammandharmasanstha.onrender.com/api');
 
 export const TempleProvider = ({ children }) => {
   const [templeData, setTempleData] = useState({
@@ -123,7 +123,10 @@ export const TempleProvider = ({ children }) => {
       setTempleData(prev => ({ ...prev, ...newData }));
       await fetch(SETTINGS_API, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-auth-token': token
+        },
         body: JSON.stringify(newData)
       });
     } catch (err) {

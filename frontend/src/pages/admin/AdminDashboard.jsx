@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -23,7 +24,8 @@ import ConfirmModal from '../../components/ConfirmModal';
 const API_BASE = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5001/api' : 'https://thesridevikarumariammandharmasanstha.onrender.com/api');
 
 const AdminDashboard = () => {
-  const { templeData, updateTempleData } = useTemple();
+  const { templeData, updateTempleData, user, token, logout } = useTemple();
+  const navigate = useNavigate();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -37,13 +39,19 @@ const AdminDashboard = () => {
   const [confirmState, setConfirmState] = useState({ isOpen: false, onConfirm: () => {}, title: '', message: '' });
 
   useEffect(() => {
+    if (!token || (user && !user.isAdmin && user.role !== 'admin')) {
+      navigate('/admin/login');
+      return;
+    }
     fetchBookings();
     fetchDonations();
-  }, []);
+  }, [token, user, navigate]);
 
   const fetchDonations = async () => {
     try {
-      const response = await fetch(`${API_BASE}/admin/donations`);
+      const response = await fetch(`${API_BASE}/admin/donations`, {
+        headers: { 'x-auth-token': token }
+      });
       if (response.ok) {
         const data = await response.json();
         setAdminDonations(data);
@@ -57,7 +65,9 @@ const AdminDashboard = () => {
     setIsFetching(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE}/admin/bookings`);
+      const response = await fetch(`${API_BASE}/admin/bookings`, {
+        headers: { 'x-auth-token': token }
+      });
       if (response.ok) {
         const data = await response.json();
         setAdminBookings(data);
@@ -77,7 +87,10 @@ const AdminDashboard = () => {
     try {
       const response = await fetch(`${API_BASE}/admin/bookings/${userId}/${bookingId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-auth-token': token
+        },
         body: JSON.stringify({ status: newStatus })
       });
       if (response.ok) {
@@ -92,7 +105,10 @@ const AdminDashboard = () => {
     try {
       const response = await fetch(`${API_BASE}/admin/donations/${userId}/${donationId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-auth-token': token
+        },
         body: JSON.stringify({ status: newStatus })
       });
       if (response.ok) {
@@ -197,6 +213,7 @@ const AdminDashboard = () => {
     try {
       const response = await fetch(`${API_BASE}/upload`, {
         method: 'POST',
+        headers: { 'x-auth-token': token },
         body: formData,
       });
       const data = await response.json();
@@ -384,7 +401,10 @@ const AdminDashboard = () => {
         </nav>
 
         <div className="p-4 border-t border-gray-800">
-          <button className="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-red-500/10 rounded-lg text-sm transition-all min-h-[44px]">
+          <button 
+            onClick={() => { logout(); navigate('/admin/login'); }}
+            className="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-red-500/10 rounded-lg text-sm transition-all min-h-[44px]"
+          >
             <LogOut size={20} />
             Logout
           </button>

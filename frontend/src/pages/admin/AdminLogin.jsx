@@ -1,28 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useTemple } from '../../context/TempleContext';
 
 const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [credentials, setCredentials] = useState({ email: '', password: '' });
-  const navigate = useNavigate();
-
-  const handleLogin = (e) => {
+  const { login } = useTemple();
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    setTimeout(() => {
-      if (credentials.email === 'admin@devikarumari.com' && credentials.password === 'Temple@2025') {
-        localStorage.setItem('isAdminAuthenticated', 'true');
+    const result = await login(credentials.email, credentials.password);
+    if (result.success) {
+      if (result.user?.isAdmin) {
         navigate('/admin');
       } else {
-        setError('Invalid email or password. Please try again.');
+        setError('Access denied. Admin privileges required.');
         setIsLoading(false);
       }
-    }, 1500);
+    } else {
+      setError(result.message);
+      setIsLoading(false);
+    }
   };
 
   return (

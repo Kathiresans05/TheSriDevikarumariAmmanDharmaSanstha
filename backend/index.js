@@ -1,21 +1,25 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
 require('dotenv').config();
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
     
     const allowed = [
       'http://localhost:5173',
+      'http://127.0.0.1:5173',
       'http://localhost:3000',
-      /\.vercel\.app$/,      // Allow any Vercel deployment
-      /\.onrender\.com$/     // Allow any Render domain
+      'http://127.0.0.1:3000',
+      /\.vercel\.app$/,
+      /\.onrender\.com$/
     ];
     
     const isAllowed = allowed.some(pattern => 
@@ -26,7 +30,7 @@ const corsOptions = {
       callback(null, true);
     } else {
       console.warn(`[CORS] Blocked origin: ${origin}`);
-      callback(null, true); // Allow all for now — tighten later
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
@@ -34,15 +38,69 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'x-auth-token', 'Authorization']
 };
 
-app.use(cors(corsOptions));
-app.options('*all', cors(corsOptions)); // Handle preflight requests
-app.use(express.json());
+// Rate Limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: { message: "Too many requests from this IP, please try again after 15 minutes" }
+});
 
-// Global Request Logger
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // Limit each IP to 10 login/register attempts per hour
+  message: { message: "Too many authentication attempts, please try again after an hour" }
+});
+
+app.use(helmet()); // Set security HTTP headers
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10kb' })); // Body parser, reading data from body into req.body, with limit
+// app.use(mongoSanitize()); // Disabled due to Express 5 compatibility issues
+
+app.use('/api/', apiLimiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+
+// Global Request Logger (Simplified for security)
 app.use((req, res, next) => {
-  console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
+  const time = new Date().toLocaleTimeString();
+  console.log(`[${time}] ${req.method} ${req.originalUrl}`);
   next();
 });
+
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('./models/User');
+
+// Auth Middleware
+const auth = (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(500).json({ message: "Database is still connecting. Please wait..." });
+  }
+  const token = req.header('x-auth-token') || req.header('Authorization')?.replace('Bearer ', '');
+  
+  if (!token) return res.status(401).json({ message: 'No token, authorization denied' });
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_change_me');
+    req.user = decoded;
+    next();
+  } catch (e) {
+    res.status(401).json({ message: 'Token is not valid' });
+  }
+};
+
+// Admin Middleware
+const admin = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user || (!user.isAdmin && user.role !== 'admin')) {
+      return res.status(403).json({ message: 'Access denied. Admin privileges required.' });
+    }
+    next();
+  } catch (err) {
+    res.status(500).json({ message: 'Authorization error' });
+  }
+};
 
 // Cloudinary Configuration
 const cloudinary = require('cloudinary').v2;
@@ -66,7 +124,7 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage: storage });
 
 // Upload Route (Moved up for priority)
-app.post('/api/upload', (req, res, next) => {
+app.post('/api/upload', auth, (req, res, next) => {
   console.log('>>> [Server] UPLOAD ROUTE HIT <<<');
   next();
 }, upload.single('file'), (req, res) => {
@@ -80,9 +138,6 @@ app.post('/api/upload', (req, res, next) => {
   }
 });
 
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const User = require('./models/User');
 
 // MongoDB Connection
 mongoose.set('bufferCommands', false);
@@ -97,21 +152,6 @@ app.get('/api/ping', (req, res) => {
   res.json({ message: 'pong', time: new Date().toLocaleTimeString() });
 });
 
-// Auth Middleware
-const auth = (req, res, next) => {
-  if (mongoose.connection.readyState !== 1) {
-    return res.status(500).json({ message: "Database is still connecting. Please wait..." });
-  }
-  const token = req.header('x-auth-token');
-  if (!token) return res.status(401).json({ message: 'No token, authorization denied' });
-  try {
-    const decoded = jwt.verify(token, 'temple_secret_key');
-    req.user = decoded;
-    next();
-  } catch (e) {
-    res.status(400).json({ message: 'Token is not valid' });
-  }
-};
 
 const TempleSettings = require('./models/TempleSettings');
 
@@ -138,12 +178,21 @@ app.post('/api/auth/register', async (req, res) => {
     if (user) return res.status(400).json({ message: 'User already exists' });
 
     user = new User({ name, email, password });
+    if (email === process.env.ADMIN_EMAIL) {
+      user.isAdmin = true;
+      user.role = 'admin';
+    }
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, 'temple_secret_key', { expiresIn: '7d' });
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    const isAdmin = user.isAdmin;
+    const token = jwt.sign(
+      { id: user._id, isAdmin }, 
+      process.env.JWT_SECRET || 'fallback_secret_change_me', 
+      { expiresIn: '7d' }
+    );
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, isAdmin } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server Error' });
@@ -159,8 +208,13 @@ app.post('/api/auth/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: user._id }, 'temple_secret_key', { expiresIn: '7d' });
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    const isAdmin = user.isAdmin || user.role === 'admin' || user.email === process.env.ADMIN_EMAIL;
+    const token = jwt.sign(
+      { id: user._id, isAdmin }, 
+      process.env.JWT_SECRET || 'fallback_secret_change_me', 
+      { expiresIn: '7d' }
+    );
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, isAdmin } });
   } catch (err) {
     res.status(500).json({ message: 'Server Error' });
   }
@@ -239,19 +293,40 @@ app.get('/api/settings', async (req, res) => {
           { id: 3, name: 'Anna Prasadam', desc: 'Sponsoring the daily sacred meal for 50+ devotees.', price: '₹2500', icon: '🍲', isFeatured: true },
           { id: 4, name: 'Kalyana Utsavam', desc: 'Grand ceremonial wedding ritual for the Divine Couple.', price: '₹5000', icon: '🌸', isFeatured: true },
         ],
-        gallery: [],
+        gallery: [
+          { id: 'g1', url: 'https://images.unsplash.com/photo-1602353620107-578bc77b7bc2?auto=format&fit=crop&q=80', title: 'Main Gopuram', type: 'photo', isFeatured: true },
+          { id: 'g2', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80', title: 'Sacred Sanctum', type: 'photo', isFeatured: true },
+          { id: 'g3', url: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80', title: 'Temple Architecture', type: 'photo', isFeatured: true },
+          { id: 'g4', url: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80', title: 'Evening Deepam', type: 'photo', isFeatured: true },
+          { id: 'g5', url: 'https://images.unsplash.com/photo-1524492459585-1250f878f681?auto=format&fit=crop&q=80', title: 'Grand Utsavam', type: 'photo', isFeatured: false },
+          { id: 'g6', url: 'https://images.unsplash.com/photo-1621303837174-89787a7d4729?auto=format&fit=crop&q=80', title: 'Morning Rituals', type: 'photo', isFeatured: false },
+        ],
         events: [
           { id: '1', title: 'Navaratri Festival', date: 'Oct 15 - Oct 24, 2026', time: 'Full Day', desc: 'Grand 10-day celebration of Goddess Durga.', type: 'Festival', attendees: '50,000+', isFeatured: true },
           { id: '2', title: 'Deepavali Special Pooja', date: 'Nov 01, 2026', time: '6:00 PM', desc: 'Auspicious Lakshmi Pooja and lighting of 1008 lamps.', type: 'Festival', attendees: '15,000+', isFeatured: true },
         ]
       });
-    } else if (!settings.events || settings.events.length === 0) {
-      // Seed default events if missing
-      settings.events = [
-        { id: '1', title: 'Navaratri Festival', date: 'Oct 15, 2026', time: 'Full Day', desc: 'Grand 10-day celebration of Goddess Durga.', type: 'Festival', attendees: '50,000+', isFeatured: true },
-        { id: '2', title: 'Deepavali Special Pooja', date: 'Nov 01, 2026', time: '6:00 PM', desc: 'Auspicious Lakshmi Pooja and lighting of 1008 lamps.', type: 'Festival', attendees: '15,000+', isFeatured: true },
-      ];
-      await settings.save();
+    } else {
+      let needsSave = false;
+      if (!settings.events || settings.events.length === 0) {
+        settings.events = [
+          { id: '1', title: 'Navaratri Festival', date: 'Oct 15, 2026', time: 'Full Day', desc: 'Grand 10-day celebration of Goddess Durga.', type: 'Festival', attendees: '50,000+', isFeatured: true },
+          { id: '2', title: 'Deepavali Special Pooja', date: 'Nov 01, 2026', time: '6:00 PM', desc: 'Auspicious Lakshmi Pooja and lighting of 1008 lamps.', type: 'Festival', attendees: '15,000+', isFeatured: true },
+        ];
+        needsSave = true;
+      }
+      if (!settings.gallery || settings.gallery.length === 0) {
+        settings.gallery = [
+          { id: 'g1', url: 'https://images.unsplash.com/photo-1602353620107-578bc77b7bc2?auto=format&fit=crop&q=80', title: 'Main Gopuram', type: 'photo', isFeatured: true },
+          { id: 'g2', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80', title: 'Sacred Sanctum', type: 'photo', isFeatured: true },
+          { id: 'g3', url: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80', title: 'Temple Architecture', type: 'photo', isFeatured: true },
+          { id: 'g4', url: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80', title: 'Evening Deepam', type: 'photo', isFeatured: true },
+          { id: 'g5', url: 'https://images.unsplash.com/photo-1524492459585-1250f878f681?auto=format&fit=crop&q=80', title: 'Grand Utsavam', type: 'photo', isFeatured: false },
+          { id: 'g6', url: 'https://images.unsplash.com/photo-1621303837174-89787a7d4729?auto=format&fit=crop&q=80', title: 'Morning Rituals', type: 'photo', isFeatured: false },
+        ];
+        needsSave = true;
+      }
+      if (needsSave) await settings.save();
     }
     res.json(settings);
   } catch (err) {
@@ -260,7 +335,7 @@ app.get('/api/settings', async (req, res) => {
   }
 });
 
-app.post('/api/settings', async (req, res) => {
+app.post('/api/settings', auth, admin, async (req, res) => {
   try {
     let settings = await TempleSettings.findOne();
     if (settings) {
@@ -288,7 +363,8 @@ app.post('/api/settings', async (req, res) => {
 
       await settings.save();
     } else {
-      settings = await TempleSettings.create(req.body);
+      const { name, email, phone, address, officeHours, specialDays, timings, sevas, gallery, events } = req.body;
+      settings = await TempleSettings.create({ name, email, phone, address, officeHours, specialDays, timings, sevas, gallery, events });
     }
     console.log('[Server] Settings updated successfully');
     res.json(settings);
@@ -298,7 +374,7 @@ app.post('/api/settings', async (req, res) => {
   }
 });
 
-app.get('/api/admin/bookings', async (req, res) => {
+app.get('/api/admin/bookings', auth, admin, async (req, res) => {
   console.log('>>> Admin Bookings Request Received at ' + new Date().toLocaleTimeString() + ' <<<');
   if (mongoose.connection.readyState !== 1) {
     return res.status(500).json({ message: "Database not connected yet", error: "Connection state is " + mongoose.connection.readyState });
@@ -333,7 +409,7 @@ app.get('/api/admin/bookings', async (req, res) => {
   }
 });
 
-app.patch('/api/admin/bookings/:userId/:bookingId', async (req, res) => {
+app.patch('/api/admin/bookings/:userId/:bookingId', auth, admin, async (req, res) => {
   try {
     const { userId, bookingId } = req.params;
     const { status } = req.body;
@@ -352,7 +428,7 @@ app.patch('/api/admin/bookings/:userId/:bookingId', async (req, res) => {
   }
 });
 
-app.get('/api/admin/donations', async (req, res) => {
+app.get('/api/admin/donations', auth, admin, async (req, res) => {
   try {
     const users = await User.find({}, 'donations name');
     let allDonations = [];
@@ -382,7 +458,7 @@ app.get('/api/admin/donations', async (req, res) => {
   }
 });
 
-app.patch('/api/admin/donations/:userId/:donationId', async (req, res) => {
+app.patch('/api/admin/donations/:userId/:donationId', auth, admin, async (req, res) => {
   try {
     const { userId, donationId } = req.params;
     const { status } = req.body;

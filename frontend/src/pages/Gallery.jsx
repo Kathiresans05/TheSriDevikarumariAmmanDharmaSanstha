@@ -114,43 +114,49 @@ const Gallery = () => {
       </div>
 
       <section className="max-w-7xl mx-auto md:px-4">
-        <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-[1px] md:gap-1">
-          {filteredItems.map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="relative group cursor-pointer overflow-hidden bg-gray-200"
-              onClick={() => setSelectedItem(item)}
-            >
-              <div className="aspect-[3/4] md:aspect-[3/4] overflow-hidden relative">
-                <img 
-                  src={item.url} 
-                  alt={item.title} 
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                
-                {/* Media Type Icons (Top Right) */}
-                <div className="absolute top-2 right-2 text-white drop-shadow-md">
-                  {(item.type || 'photo') === 'video' && (
-                    <div className="bg-black/20 p-1 rounded-md backdrop-blur-sm">
-                      <svg className="w-4 h-4 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-                    </div>
-                  )}
-                </div>
+        {filteredItems.length === 0 ? (
+          <div className="col-span-full py-20 text-center">
+            <p className="text-gray-400 font-serif text-xl italic">No media items found in the gallery.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-[1px] md:gap-1">
+            {filteredItems.map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                className="relative group cursor-pointer overflow-hidden bg-gray-200"
+                onClick={() => setSelectedItem(item)}
+              >
+                <div className="aspect-[3/4] md:aspect-[3/4] overflow-hidden relative">
+                  <img 
+                    src={item.url} 
+                    alt={item.title} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  
+                  {/* Media Type Icons (Top Right) */}
+                  <div className="absolute top-2 right-2 text-white drop-shadow-md">
+                    {(item.type || 'photo') === 'video' && (
+                      <div className="bg-black/20 p-1 rounded-md backdrop-blur-sm">
+                        <svg className="w-4 h-4 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Desktop Hover Info */}
-                <div className="hidden md:flex absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center p-6 text-center">
-                   <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform">
-                      <h4 className="text-white font-serif text-xl mb-2">{item.title}</h4>
-                      <p className="text-white/70 text-xs uppercase tracking-widest">{item.type}</p>
-                   </div>
+                  {/* Desktop Hover Info */}
+                  <div className="hidden md:flex absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center p-6 text-center">
+                    <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                        <h4 className="text-white font-serif text-xl mb-2">{item.title}</h4>
+                        <p className="text-white/70 text-xs uppercase tracking-widest">{item.type || 'photo'}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

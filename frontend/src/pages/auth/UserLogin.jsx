@@ -13,16 +13,13 @@ const UserLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Admin bypass for the regular login page
-    if (email === 'admin@devikarumari.com' && password === 'Temple@2025') {
-      localStorage.setItem('isAdminAuthenticated', 'true');
-      navigate('/admin');
-      return;
-    }
-
     const result = await login(email, password);
     if (result.success) {
-      navigate('/');
+      if (result.user?.isAdmin) {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } else {
       setError(result.message);
     }

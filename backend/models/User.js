@@ -9,8 +9,12 @@ const UserSchema = new mongoose.Schema({
     sevaId: Number,
     date: Date,
     time: String,
-    status: { type: String, default: 'Pending' },
-    amount: String
+    devoteeName: String,
+    gothram: String,
+    transactionId: String,
+    status: { type: String, default: 'Pending Verification' },
+    amount: String,
+    bookingDate: { type: Date, default: Date.now }
   }],
   donations: [{
     amount: String,

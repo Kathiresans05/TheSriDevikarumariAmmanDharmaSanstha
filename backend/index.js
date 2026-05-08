@@ -177,16 +177,28 @@ app.get('/api/auth/user', auth, async (req, res) => {
 
 // Protected Booking Route
 app.post('/api/bookings', auth, async (req, res) => {
-  const { sevaId, date, time, amount } = req.body;
+  const { sevaId, date, time, amount, devoteeName, gothram, transactionId } = req.body;
   try {
     const user = await User.findById(req.user.id);
     console.log(`Booking Request from ${user.name}:`, req.body);
-    user.bookings.push({ sevaId, date, time, amount });
+    
+    user.bookings.push({ 
+      sevaId, 
+      date, 
+      time, 
+      amount, 
+      devoteeName, 
+      gothram, 
+      transactionId,
+      status: 'Pending Verification'
+    });
+    
     user.markModified('bookings');
     await user.save();
-    console.log(`Booking saved for ${user.name}. Total bookings: ${user.bookings.length}`);
+    console.log(`Booking saved for ${user.name} (Transaction: ${transactionId}).`);
     res.json(user.bookings);
   } catch (err) {
+    console.error('Booking Error:', err);
     res.status(500).send('Server Error');
   }
 });

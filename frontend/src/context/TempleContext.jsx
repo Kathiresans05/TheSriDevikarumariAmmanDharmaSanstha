@@ -15,7 +15,14 @@ export const TempleProvider = ({ children }) => {
       evening: { open: "04:00 PM", close: "09:00 PM" }
     },
     sevas: [],
-    gallery: []
+    gallery: [
+      { id: 1, title: "Main Sanctum", type: "photo", url: "/hero-temple.png", isFeatured: true },
+      { id: 2, title: "Temple Night View", type: "photo", url: "/hero-night.png", isFeatured: true },
+      { id: 3, title: "Sacred Pond", type: "photo", url: "/hero-pond.png", isFeatured: true },
+      { id: 4, title: "Annual Festival", type: "photo", url: "/hero-festival.png", isFeatured: true },
+      { id: 5, title: "Devotional Chanting", type: "photo", url: "/hero-temple.png", isFeatured: false },
+      { id: 6, title: "Evening Arati", type: "photo", url: "/hero-night.png", isFeatured: false }
+    ]
   });
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);

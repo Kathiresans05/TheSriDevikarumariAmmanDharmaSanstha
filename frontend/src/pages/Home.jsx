@@ -10,13 +10,23 @@ const Home = () => {
   const { templeData, loading } = useTemple();
   const navigate = useNavigate();
   const [currentImage, setCurrentImage] = useState(0);
-
-  const heroImages = [
+  const [heroImages, setHeroImages] = useState([
     '/hero-temple.png',
     '/hero-night.png',
     '/hero-pond.png',
     '/hero-festival.png'
-  ];
+  ]);
+
+  useEffect(() => {
+    if (templeData.gallery && templeData.gallery.length > 0) {
+      // Prioritize featured images for the hero slider
+      const featured = templeData.gallery.filter(item => item.isFeatured).map(item => item.url);
+      const all = templeData.gallery.map(item => item.url);
+      
+      const newImages = featured.length > 0 ? featured : all;
+      setHeroImages(newImages);
+    }
+  }, [templeData.gallery]);
 
   useEffect(() => {
     const timer = setInterval(() => {

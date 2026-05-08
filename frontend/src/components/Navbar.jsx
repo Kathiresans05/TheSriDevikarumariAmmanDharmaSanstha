@@ -69,10 +69,9 @@ const Navbar = () => {
                     </Link>
                     <button 
                       onClick={logout}
-                      className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
-                      title="Logout"
+                      className="text-xs font-bold text-white/70 hover:text-white transition-colors ml-2 border-l border-white/20 pl-3"
                     >
-                      <LogOut size={16} className="text-white" />
+                      LOGOUT
                     </button>
                   </div>
                 ) : (
@@ -89,7 +88,6 @@ const Navbar = () => {
                   to="/pooja"
                   className="flex items-center gap-2 bg-temple-gold text-temple-red px-6 py-2 rounded-full text-sm font-bold hover:bg-white transition-all shadow-md active:scale-95 whitespace-nowrap uppercase"
                 >
-                  <Bell size={16} />
                   {t('nav.book_pooja') || 'Book Pooja'}
                 </Link>
               </div>

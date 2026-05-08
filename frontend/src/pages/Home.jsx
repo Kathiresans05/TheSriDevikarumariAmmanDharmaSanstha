@@ -54,7 +54,7 @@ const Home = () => {
   return (
     <div className="overflow-hidden bg-temple-white">
       {/* Hero Section */}
-      <section className="relative h-[80vh] md:h-[90vh] flex items-center justify-center text-center text-white overflow-hidden">
+      <section className="relative h-[85vh] md:h-[90vh] flex items-center justify-center text-center text-white overflow-hidden">
         <div className="absolute inset-0 z-0">
           <AnimatePresence mode="wait">
             <motion.img
@@ -66,6 +66,7 @@ const Home = () => {
               transition={{ duration: 1.5 }}
               alt="Temple Hero"
               className="w-full h-full object-cover brightness-[0.7] md:brightness-[0.8]"
+              style={{ objectPosition: '50% 40%' }}
             />
           </AnimatePresence>
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-temple-red/30"></div>

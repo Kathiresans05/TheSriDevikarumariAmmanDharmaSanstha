@@ -239,12 +239,7 @@ app.get('/api/settings', async (req, res) => {
           { id: 3, name: 'Anna Prasadam', desc: 'Sponsoring the daily sacred meal for 50+ devotees.', price: '₹2500', icon: '🍲', isFeatured: true },
           { id: 4, name: 'Kalyana Utsavam', desc: 'Grand ceremonial wedding ritual for the Divine Couple.', price: '₹5000', icon: '🌸', isFeatured: true },
         ],
-        gallery: [
-          { id: '1', url: '/hero-temple.png', title: 'Temple Front View', isFeatured: true },
-          { id: '2', url: '/hero-night.png', title: 'Evening Aarti', isFeatured: true },
-          { id: '3', url: '/hero-pond.png', title: 'Sacred Temple Pond', isFeatured: true },
-          { id: '4', url: '/hero-festival.png', title: 'Festival Celebration', isFeatured: true },
-        ],
+        gallery: [],
         events: [
           { id: '1', title: 'Navaratri Festival', date: 'Oct 15 - Oct 24, 2026', time: 'Full Day', desc: 'Grand 10-day celebration of Goddess Durga.', type: 'Festival', attendees: '50,000+', isFeatured: true },
           { id: '2', title: 'Deepavali Special Pooja', date: 'Nov 01, 2026', time: '6:00 PM', desc: 'Auspicious Lakshmi Pooja and lighting of 1008 lamps.', type: 'Festival', attendees: '15,000+', isFeatured: true },

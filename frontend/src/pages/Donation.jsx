@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { CreditCard, Landmark, QrCode, Heart, LogIn, CheckCircle2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTemple } from '../context/TempleContext';
+import { useToast } from '../components/Toast';
 
 const API_BASE = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5001/api' : 'https://thesridevikarumariammandharmasanstha.onrender.com/api');
 
 const Donation = () => {
   const { user, submitDonation } = useTemple();
+  const toast = useToast();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCause, setSelectedCause] = useState('');
@@ -48,7 +50,7 @@ const Donation = () => {
     } catch (err) {
       console.error('Upload failed:', err);
       // Upload failed but don't block the form — Transaction ID is enough
-      alert('Receipt upload failed (optional). You can still submit with your Transaction ID.');
+      toast.error('Receipt upload failed (optional). You can still submit with your Transaction ID.');
     } finally {
       setIsUploading(false);
     }
@@ -66,6 +68,7 @@ const Donation = () => {
     });
 
     if (result.success) {
+      toast.success('Donation submitted successfully for verification!');
       setShowSuccess(true);
       setTimeout(() => {
         setIsModalOpen(false);
@@ -75,7 +78,7 @@ const Donation = () => {
         setReceiptUrl('');
       }, 3000);
     } else {
-      alert(result.message);
+      toast.error(result.message);
     }
     setIsSubmitting(false);
   };

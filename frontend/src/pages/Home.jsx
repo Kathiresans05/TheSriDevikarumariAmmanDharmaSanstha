@@ -189,22 +189,22 @@ const Home = () => {
               Explore Full Gallery
             </button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 h-auto md:h-[500px]">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-1 h-auto md:h-[700px]">
             {templeData.gallery && templeData.gallery.filter(item => item.isFeatured).length > 0 ? (
               (() => {
                 const featured = templeData.gallery.filter(item => item.isFeatured);
                 return (
                   <>
-                    <div className="col-span-2 row-span-1 md:row-span-2 rounded-2xl md:rounded-3xl overflow-hidden shadow-xl border-2 md:border-4 border-white aspect-video md:aspect-auto">
+                    <div className="col-span-2 row-span-1 md:row-span-2 rounded-2xl md:rounded-none overflow-hidden shadow-xl border-2 md:border-0 border-white aspect-video md:aspect-auto">
                       <img src={featured[0]?.url} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
                     </div>
-                    <div className="rounded-2xl md:rounded-3xl overflow-hidden shadow-xl border-2 md:border-4 border-white aspect-square md:aspect-auto">
+                    <div className="rounded-2xl md:rounded-none overflow-hidden shadow-xl border-2 md:border-0 border-white aspect-square md:aspect-auto">
                       <img src={featured[1]?.url || featured[0]?.url} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
                     </div>
-                    <div className="rounded-2xl md:rounded-3xl overflow-hidden shadow-xl border-2 md:border-4 border-white aspect-square md:aspect-auto">
+                    <div className="rounded-2xl md:rounded-none overflow-hidden shadow-xl border-2 md:border-0 border-white aspect-square md:aspect-auto">
                       <img src={featured[2]?.url || featured[0]?.url} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
                     </div>
-                    <div className="col-span-2 rounded-2xl md:rounded-3xl overflow-hidden shadow-xl border-2 md:border-4 border-white aspect-video md:aspect-auto">
+                    <div className="col-span-2 rounded-2xl md:rounded-none overflow-hidden shadow-xl border-2 md:border-0 border-white aspect-video md:aspect-auto">
                       <img src={featured[3]?.url || featured[0]?.url} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Temple" />
                     </div>
                   </>

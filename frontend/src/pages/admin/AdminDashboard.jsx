@@ -17,11 +17,14 @@ import {
 } from 'lucide-react';
 
 import { useTemple } from '../../context/TempleContext';
+import { useToast } from '../../components/Toast';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const API_BASE = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5001/api' : 'https://thesridevikarumariammandharmasanstha.onrender.com/api');
 
 const AdminDashboard = () => {
   const { templeData, updateTempleData } = useTemple();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -31,6 +34,7 @@ const AdminDashboard = () => {
   const [adminDonations, setAdminDonations] = useState([]);
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState(null);
+  const [confirmState, setConfirmState] = useState({ isOpen: false, onConfirm: () => {}, title: '', message: '' });
 
   useEffect(() => {
     fetchBookings();
@@ -127,23 +131,31 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteSeva = (id) => {
-    if (window.confirm('Are you sure you want to delete this seva?')) {
-      let newData = { ...templeData };
-      newData.sevas = newData.sevas.filter(s => s.id !== id);
-      updateTempleData(newData);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
-    }
+    setConfirmState({
+      isOpen: true,
+      title: 'Delete Seva',
+      message: 'Are you sure you want to delete this seva? This action cannot be undone.',
+      onConfirm: () => {
+        let newData = { ...templeData };
+        newData.sevas = newData.sevas.filter(s => s.id !== id);
+        updateTempleData(newData);
+        toast.success('Seva deleted successfully');
+      }
+    });
   };
 
   const handleDeleteGalleryItem = (id) => {
-    if (window.confirm('Are you sure you want to delete this image?')) {
-      let newData = { ...templeData };
-      newData.gallery = newData.gallery.filter(item => item.id !== id);
-      updateTempleData(newData);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
-    }
+    setConfirmState({
+      isOpen: true,
+      title: 'Delete Media',
+      message: 'Are you sure you want to delete this image? It will be removed from the gallery.',
+      onConfirm: () => {
+        let newData = { ...templeData };
+        newData.gallery = newData.gallery.filter(item => item.id !== id);
+        updateTempleData(newData);
+        toast.success('Media deleted successfully');
+      }
+    });
   };
 
   const handleEditGalleryItem = (item) => {
@@ -190,16 +202,17 @@ const AdminDashboard = () => {
       const data = await response.json();
       setModalData({ ...modalData, src: data.url });
       setIsUploading(false);
+      toast.success('File uploaded successfully');
     } catch (err) {
       console.error('Upload failed:', err);
-      alert('Upload failed. Please try again.');
+      toast.error('Upload failed. Please try again.');
       setIsUploading(false);
     }
   };
 
   const handleAddEntry = () => {
     if (isUploading) {
-      alert('Please wait for the upload to complete');
+      toast.error('Please wait for the upload to complete');
       return;
     }
     let newData = { ...templeData };
@@ -252,7 +265,7 @@ const AdminDashboard = () => {
       if (isEditMode) {
         newData.gallery = newData.gallery.map(item => 
           item.id === modalData.id 
-          ? { ...item, url: modalData.src, title: modalData.title, isFeatured: modalData.isFeatured } 
+          ? { ...item, url: modalData.src, title: modalData.title, type: modalType === 'video' ? 'video' : 'photo', isFeatured: modalData.isFeatured } 
           : item
         );
       } else {
@@ -260,6 +273,7 @@ const AdminDashboard = () => {
           id: Date.now().toString(),
           url: modalData.src || '/hero-temple.png',
           title: modalData.title || 'Temple Media',
+          type: modalType === 'video' ? 'video' : 'photo',
           isFeatured: modalData.isFeatured || false
         };
         newData.gallery = [...(newData.gallery || []), newMedia];
@@ -278,10 +292,10 @@ const AdminDashboard = () => {
     setIsSaving(true);
     try {
       await updateTempleData(formData);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      toast.success('Settings saved successfully!');
     } catch (err) {
       console.error(err);
+      toast.error('Failed to save settings');
     } finally {
       setIsSaving(false);
     }
@@ -668,7 +682,7 @@ const AdminDashboard = () => {
               {/* Media Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 {templeData.gallery?.map((item) => (
-                  <div key={item.id} className="group relative aspect-video md:aspect-square bg-gray-100 rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+                  <div key={item.id} className="group relative aspect-[3/4] bg-gray-100 rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
                     <img 
                       src={item.url} 
                       className="w-full h-full object-cover transition-transform group-hover:scale-110" 
@@ -751,7 +765,22 @@ const AdminDashboard = () => {
                         <span className="bg-temple-red/10 text-temple-red text-[10px] uppercase font-bold px-3 py-1 rounded-full border border-temple-red/20">{ev.type}</span>
                         <div className="flex gap-2">
                           <button onClick={() => { setModalType('event'); setModalData({...ev, src: ev.image}); setIsEditMode(true); setIsModalOpen(true); }} className="text-blue-500 font-bold text-sm hover:underline">Edit</button>
-                          <button onClick={() => { if(window.confirm('Delete this event?')) { updateTempleData({ ...templeData, events: templeData.events.filter(e => e.id !== ev.id) }) } }} className="text-red-500 font-bold text-sm hover:underline ml-4">Delete</button>
+                          <button 
+                            onClick={() => { 
+                              setConfirmState({
+                                isOpen: true,
+                                title: 'Delete Event',
+                                message: `Are you sure you want to delete "${ev.title}"?`,
+                                onConfirm: () => {
+                                  updateTempleData({ ...templeData, events: templeData.events.filter(e => e.id !== ev.id) });
+                                  toast.success('Event deleted successfully');
+                                }
+                              });
+                            }} 
+                            className="text-red-500 font-bold text-sm hover:underline ml-4"
+                          >
+                            Delete
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -981,20 +1010,7 @@ const AdminDashboard = () => {
                 </button>
               </div>
 
-              {/* Success Toast */}
-              {showToast && (
-                <div className="fixed bottom-8 right-8 bg-gray-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce-in z-50">
-                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm">Settings Saved!</p>
-                    <p className="text-[10px] text-gray-400">Temple configuration updated successfully.</p>
-                  </div>
-                </div>
-              )}
+              {/* Old Success Toast removed in favor of react-hot-toast */}
             </div>
           )}
           </div>
@@ -1249,6 +1265,14 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
+      
+      <ConfirmModal 
+        isOpen={confirmState.isOpen}
+        onClose={() => setConfirmState({ ...confirmState, isOpen: false })}
+        onConfirm={confirmState.onConfirm}
+        title={confirmState.title}
+        message={confirmState.message}
+      />
     </div>
   );
 };

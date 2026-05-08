@@ -12,7 +12,10 @@ const Gallery = () => {
 
   const filteredItems = filter === 'all' 
     ? mediaItems 
-    : mediaItems.filter(item => item.type === filter);
+    : mediaItems.filter(item => {
+        const itemType = item.type || 'photo'; // Default to photo if type is missing
+        return itemType === filter;
+      });
 
   const handleNext = (e) => {
     e?.stopPropagation();
@@ -70,7 +73,7 @@ const Gallery = () => {
               className="relative max-w-5xl w-full h-full flex flex-col items-center justify-center"
               onClick={(e) => e.stopPropagation()}
             >
-              {selectedItem.type === 'video' ? (
+              {(selectedItem.type || 'photo') === 'video' ? (
                 <video 
                   src={selectedItem.url} 
                   controls 
@@ -86,7 +89,7 @@ const Gallery = () => {
               )}
               <div className="mt-6 text-center">
                 <h3 className="text-white text-2xl font-serif mb-2">{selectedItem.title}</h3>
-                <p className="text-white/60 text-sm uppercase tracking-widest">{selectedItem.type}</p>
+                <p className="text-white/60 text-sm uppercase tracking-widest">{selectedItem.type || 'photo'}</p>
               </div>
             </motion.div>
           </motion.div>
@@ -111,7 +114,7 @@ const Gallery = () => {
       </div>
 
       <section className="max-w-7xl mx-auto md:px-4">
-        <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-[1px] md:gap-8">
+        <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-[1px] md:gap-1">
           {filteredItems.map((item, i) => (
             <motion.div
               key={i}
@@ -121,16 +124,16 @@ const Gallery = () => {
               className="relative group cursor-pointer overflow-hidden bg-gray-200"
               onClick={() => setSelectedItem(item)}
             >
-              <div className="aspect-[3/4] md:aspect-[4/3] overflow-hidden relative">
+              <div className="aspect-[3/4] md:aspect-[3/4] overflow-hidden relative">
                 <img 
                   src={item.url} 
                   alt={item.title} 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 
                 {/* Media Type Icons (Top Right) */}
                 <div className="absolute top-2 right-2 text-white drop-shadow-md">
-                  {item.type === 'video' && (
+                  {(item.type || 'photo') === 'video' && (
                     <div className="bg-black/20 p-1 rounded-md backdrop-blur-sm">
                       <svg className="w-4 h-4 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
                     </div>

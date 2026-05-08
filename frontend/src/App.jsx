@@ -14,6 +14,7 @@ import AdminLogin from './pages/admin/AdminLogin';
 import UserLogin from './pages/auth/UserLogin';
 import UserRegister from './pages/auth/UserRegister';
 import UserDashboard from './pages/auth/UserDashboard';
+import { ToastProvider } from './components/Toast';
 import { TempleProvider, useTemple } from './context/TempleContext';
 import './i18n/config';
 
@@ -79,9 +80,11 @@ const AppContent = () => {
 function App() {
   return (
     <Router>
-      <TempleProvider>
-        <AppContent />
-      </TempleProvider>
+      <ToastProvider>
+        <TempleProvider>
+          <AppContent />
+        </TempleProvider>
+      </ToastProvider>
     </Router>
   );
 }
